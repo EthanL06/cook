@@ -1,0 +1,4 @@
+.DS_Store
+.lavish/
+.context/
+__pycache__/

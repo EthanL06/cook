@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 380" width="1040" height="380" role="img" aria-label="The cook flow: you do the intake, the spec and the review; the agent does everything else">
+  <title>The cook flow</title>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9aa0a6"/></marker>
+    <marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b5461c"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4f8a5b"/></marker>
+    <style>
+      text { font-family: ui-sans-serif, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #17140f; }
+      .t { font-size: 13px; font-weight: 600; }
+      .s { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; fill: #6b6459; }
+      .l { font-size: 11px; font-weight: 500; fill: #6b6459; }
+      .lane { font-size: 11px; font-weight: 700; letter-spacing: .14em; }
+      .box { fill: #ffffff; stroke: #d9d3c8; stroke-width: 1.2; }
+      .you { fill: #fdf3ea; stroke: #e2b08f; }
+      .learn { fill: #eef5ef; stroke: #9cc3a3; }
+      .e { stroke: #9aa0a6; stroke-width: 1.4; fill: none; }
+      .eo { stroke: #b5461c; stroke-width: 1.4; fill: none; stroke-dasharray: 4 3; }
+      .eg { stroke: #4f8a5b; stroke-width: 1.4; fill: none; stroke-dasharray: 4 3; }
+    </style>
+  </defs>
+
+  <rect width="1040" height="380" rx="16" fill="#f8f5f0"/>
+
+  <rect x="16" y="16" width="1008" height="124" rx="14" fill="#fbeee3" stroke="#f0d6c2"/>
+  <text class="lane" x="44" y="78" text-anchor="middle" transform="rotate(-90 44 78)" style="fill:#b5461c">YOU</text>
+  <rect x="16" y="156" width="1008" height="150" rx="14" fill="#efece6" stroke="#e2ddd4"/>
+  <text class="lane" x="44" y="231" text-anchor="middle" transform="rotate(-90 44 231)" style="fill:#6b6459">AUTONOMOUS</text>
+
+  <g><rect class="box you" x="84" y="52" width="104" height="58" rx="12"/><text class="t" x="136" y="77" text-anchor="middle">1 · Intake</text><text class="s" x="136" y="95" text-anchor="middle">/cook</text></g>
+  <g><rect class="box you" x="316" y="52" width="104" height="58" rx="12"/><text class="t" x="368" y="77" text-anchor="middle">2 · Spec</text><text class="s" x="368" y="95" text-anchor="middle">annotate</text></g>
+  <g><rect class="box you" x="664" y="52" width="104" height="58" rx="12" style="stroke-dasharray:5 3"/><text class="t" x="716" y="77" text-anchor="middle">Unblock</text><text class="s" x="716" y="95" text-anchor="middle">only if asked</text></g>
+  <g><rect class="box you" x="896" y="52" width="104" height="58" rx="12"/><text class="t" x="948" y="77" text-anchor="middle">3 · Review</text><text class="s" x="948" y="95" text-anchor="middle">you merge</text></g>
+
+  <g><rect class="box" x="84" y="202" width="104" height="58" rx="12"/><text class="t" x="136" y="227" text-anchor="middle">Issue</text><text class="s" x="136" y="245" text-anchor="middle">tracker</text></g>
+  <g><rect class="box" x="200" y="202" width="104" height="58" rx="12"/><text class="t" x="252" y="227" text-anchor="middle">Worktree</text><text class="s" x="252" y="245" text-anchor="middle">paseo</text></g>
+  <g><rect class="box" x="316" y="202" width="104" height="58" rx="12"/><text class="t" x="368" y="227" text-anchor="middle">Draft spec</text><text class="s" x="368" y="245" text-anchor="middle">lavish</text></g>
+  <g><rect class="box" x="432" y="202" width="104" height="58" rx="12"/><text class="t" x="484" y="227" text-anchor="middle">Build</text><text class="s" x="484" y="245" text-anchor="middle">subagents</text></g>
+  <g><rect class="box" x="548" y="202" width="104" height="58" rx="12"/><text class="t" x="600" y="227" text-anchor="middle">Verify</text><text class="s" x="600" y="245" text-anchor="middle">verifier-*</text></g>
+  <g><rect class="box" x="664" y="202" width="104" height="58" rx="12"/><text class="t" x="716" y="227" text-anchor="middle">PR</text><text class="s" x="716" y="245" text-anchor="middle">gh</text></g>
+  <g><rect class="box" x="780" y="202" width="104" height="58" rx="12"/><text class="t" x="832" y="227" text-anchor="middle">Review loop</text><text class="s" x="832" y="245" text-anchor="middle">no-mistakes</text></g>
+  <g><rect class="box learn" x="896" y="202" width="104" height="58" rx="12"/><text class="t" x="948" y="227" text-anchor="middle">Learn</text><text class="s" x="948" y="245" text-anchor="middle">cook-learn</text></g>
+
+  <path class="e" d="M136,110 V198" marker-end="url(#a)"/>
+  <path class="e" d="M188,231 H196" marker-end="url(#a)"/>
+  <path class="e" d="M304,231 H312" marker-end="url(#a)"/>
+  <path class="eo" d="M352,202 V114" marker-end="url(#o)"/>
+  <path class="eo" d="M384,110 V198" marker-end="url(#o)"/>
+  <text class="l" x="344" y="158" text-anchor="end" style="fill:#b5461c">link + push</text>
+  <text class="l" x="394" y="158" style="fill:#b5461c">feedback</text>
+  <path class="e" d="M420,81 C474,81 484,138 484,198" marker-end="url(#a)"/>
+  <text class="l" x="456" y="130">approve</text>
+  <path class="e" d="M536,231 H544" marker-end="url(#a)"/>
+  <path class="e" d="M652,231 H660" marker-end="url(#a)"/>
+  <path class="e" d="M768,231 H776" marker-end="url(#a)"/>
+  <path class="e" d="M884,231 H892" marker-end="url(#a)"/>
+  <path class="e" d="M568,260 C568,286 504,286 504,264" marker-end="url(#a)" style="stroke-dasharray:4 3"/>
+  <text class="l" x="536" y="298" text-anchor="middle">repair</text>
+  <path class="eo" d="M716,198 V114" marker-end="url(#o)" marker-start="url(#o)"/>
+  <text class="l" x="724" y="158" style="fill:#b5461c">any step</text>
+  <path class="e" d="M948,202 V114" marker-end="url(#a)"/>
+  <text class="l" x="956" y="158">push</text>
+  <path class="eg" d="M964,260 C964,352 484,352 484,264" marker-end="url(#g)"/>
+  <text class="l" x="724" y="346" text-anchor="middle" style="fill:#3f7a4c">recipes · scripts · verifiers make the next build better</text>
+</svg>
