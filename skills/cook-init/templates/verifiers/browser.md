@@ -11,7 +11,7 @@ Drives `<app name>` with agent-browser against the dev server of the worktree un
 
 1. `cd "$(git rev-parse --show-toplevel)"` and `<pnpm install>` if `node_modules` is missing.
 2. Start the dev server on a free port and keep its log: `PORT=<port> <pnpm --filter web dev> > "$run/dev.log" 2>&1 &`. Save the PID. Wait until `curl -sf http://localhost:<port><health path>` answers (at most 90 s), else BLOCKED with the last 30 lines of the log.
-3. Use one browser session per run: `export AGENT_BROWSER_SESSION="verify-$(basename "$run")"`.
+3. Use one headless browser session per run: `export AGENT_BROWSER_SESSION="verify-$(basename "$run")"` and `unset AGENT_BROWSER_HEADED`. Do not pass `--headed` unless a check needs a window (the user must act in the browser, real hover, the OS clipboard, a smooth recording), and say why in the result.
 4. Sign in, when the flow needs it: <how to get a test account: seed script, env var name, or "no auth">.
 
 ## Steps

@@ -37,6 +37,7 @@ T="$S/tracker.sh"                # view, search, create, comment, state, url, br
 - Never merge, force-push, rebase a pushed branch, close the PR, or push to a branch other than the build's own branch.
 - Never write data, apply a migration or deploy to a shared environment (staging included) unless the user says so for that change. Deploy steps go in a comment for a person.
 - Stop only the processes, servers and browsers you started. Do not touch other worktrees.
+- Run every browser headless, so it never takes focus and builds can run side by side. agent-browser and playwright-axi are headless by default; use the headless mode of chrome-devtools-axi too. Use a headed window only when a check cannot work without one: the user wants to watch or must act in the browser (sign-in, CAPTCHA, a permission prompt), real hover, the real OS clipboard, or a smooth high-frame-rate recording. Say why in the report, and go back to headless after that check.
 - Write issue, PR and push text in plain, short sentences. Never use the em dash.
 - One push for each blocker. Never send the same blocker twice.
 

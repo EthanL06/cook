@@ -205,6 +205,8 @@ browser: agent-browser   # agent-browser | chrome-devtools-axi | playwright-axi
 
 The `dev` command in `.agents/cook.md` starts the app. The verifier uses it.
 
+The browser runs headless by default, so it never takes focus and several builds can verify at the same time. An agent opens a headed window only when a check needs one: you want to watch or must sign in yourself, a real hover, the OS clipboard, or a smooth recording. It says why in the report.
+
 ### Example
 
 For build #42, `verifier-browser` starts the dev server. It opens a recipe, turns on the offline toggle, switches the network off, and reloads the page. It takes four screenshots. The screenshots go into the PR.

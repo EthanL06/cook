@@ -22,6 +22,7 @@ Use only shell, git and files. Do not depend on a harness feature.
 - **Never weaken a check to get a pass.** Do not delete, skip or loosen tests, assertions or verifier steps. Change a test only when it contradicts the intended behavior, and say so in the receipt.
 - **No outward actions:** no commit, push, PR, deploy, migration, or job trigger on a shared environment. Repairs stay uncommitted (/cook commits them).
 - **Shared machine.** Stop only processes and browsers you started.
+- **Headless browsers.** Run every browser headless, so it never takes focus and builds can run side by side. agent-browser and playwright-axi are headless by default; use the headless mode of chrome-devtools-axi too. Use a headed window only when a check cannot work without one: the user wants to watch or must act in the browser (sign-in, CAPTCHA, a permission prompt), real hover, the real OS clipboard, or a smooth high-frame-rate recording. Say why in the report, and go back to headless after that check.
 - Follow `.agents/cook.md` and `AGENTS.md` where they are stricter than this file.
 
 ## A. Context
