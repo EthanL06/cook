@@ -11,7 +11,8 @@ quoted strings, inline lists ([a, b]), block lists (- a) and one level
 of nested maps. A full YAML parser is not a dependency on purpose.
 
 The file is read from the main checkout, so a build in a worktree reads
-the same config as the repo it came from.
+the same config as the repo it came from. COOK_CONFIG=<file> reads another
+file instead, for example a draft that cook-init has not written yet.
 
 Exit codes: 0 found, 1 bad arguments, 2 no cook.md, 3 key not set and no default.
 """
@@ -29,6 +30,7 @@ DEFAULTS = {
     "browser": "agent-browser",
     "specs": "local",
     "notify": "on",
+    "ui_refs": "none",
 }
 
 
@@ -125,7 +127,7 @@ def main(argv):
     if not argv or argv[0] not in ("get", "json", "path"):
         print("usage: config.py [--repo <dir>] get <key> [default] | json | path", file=sys.stderr)
         return 1
-    path = os.path.join(main_checkout(repo), ".agents", "cook.md")
+    path = os.environ.get("COOK_CONFIG") or os.path.join(main_checkout(repo), ".agents", "cook.md")
     if argv[0] == "path":
         print(path)
         return 0 if os.path.exists(path) else 2

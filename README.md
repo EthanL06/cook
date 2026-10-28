@@ -25,7 +25,7 @@ Lines that start with `you>` are what you type. All other lines are what cook do
 ```text
 # once per machine
 npx skills add EthanL06/cook
-~/.agents/skills/cook/doctor.sh              # says what is missing: paseo ok, agent-browser missing ...
+~/.agents/skills/cook/doctor.sh --fix        # checks every tool, asks once, installs what it can
 
 # once per project
 cd ~/code/recipe-app
@@ -71,12 +71,13 @@ Choose one of three ways. Each way installs the skills globally. Global install 
 Install the cook kit from https://github.com/EthanL06/cook.
 
 1. Clone the repo to ~/Developer/cook.
-2. Run ~/Developer/cook/install.sh doctor.
-3. Show me which tools are missing. Say which ones are required and which ones are optional.
-4. Ask me which optional parts I want: ntfy push, Tailscale machines, a CLI proxy.
-5. Run ~/Developer/cook/install.sh add. For each missing tool, show me the install command
-   and run it only after I say yes.
-6. Offer to run /cook-init in my project.
+2. Run ~/Developer/cook/install.sh add. It links the skills and checks the tools.
+3. Show me the report: what is missing, what is required, and what is optional.
+4. Ask me once if I want the missing tools installed. On yes, run
+   ~/Developer/cook/skills/cook/doctor.sh --fix --yes and show me the result.
+5. Walk me through the steps under "Do these yourself" (sign-ins, API keys).
+6. Ask me which optional parts I want: ntfy push, Tailscale machines, a CLI proxy.
+7. Offer to run /cook-init in my project.
 
 Never type or store a secret for me. This includes tokens, API keys, and passwords.
 When a tool needs a secret, tell me where to put it and let me do it.
@@ -86,7 +87,10 @@ When a tool needs a secret, tell me where to put it and let me do it.
 
 ```bash
 npx skills add EthanL06/cook
+~/.agents/skills/cook/doctor.sh --fix
 ```
+
+The skills CLI does not run setup steps. If you skip doctor, `/cook` and `/cook-init` run it for you the first time.
 
 ### 3. git clone
 
@@ -101,7 +105,16 @@ git clone https://github.com/EthanL06/cook ~/Developer/cook && ~/Developer/cook/
 | `install.sh add [--project <dir>]` | Links the skills. With `--project`, installs into the `.agents/skills` folder of one repo. |
 | `install.sh update [--project <dir>]` | Pulls the latest kit. Global links update by themselves. With `--project`, copies the new version into the repo. |
 | `install.sh remove [--project <dir>]` | Removes the skills that install.sh put there. Your `cook.md`, verifiers and recipes stay. |
-| `install.sh doctor` | Checks each tool and prints the install command for each missing one. It installs nothing. |
+| `install.sh doctor [--fix]` | Checks each tool the project needs. With `--fix`, it lists the install commands, asks once, and runs only what you approve. |
+
+## Missing tools
+
+`doctor.sh` checks what this machine needs for the current project. It reads `.agents/cook.md`, so a Linear project needs `LINEAR_API_KEY`, `review: greptile` needs a Greptile skill, and `ui_refs: mobbin` needs a Mobbin sign-in.
+
+- `doctor.sh` shows the report. Nothing changes.
+- `doctor.sh --fix` lists the install commands (brew, npm, npx, the agent-browser Chrome download, the no-mistakes installer), asks once, runs what you approve, and checks again.
+- Steps that need an account, a password or a secret are never run. Doctor lists them under "Do these yourself": `gh auth login`, the Claude Code or Codex sign-in, API keys, Mobbin and ntfy.
+- `/cook` runs `doctor.sh --quick` at the start of each build. It is silent when the last check passed in the past 24 hours.
 
 ## The skills
 
@@ -134,7 +147,7 @@ The init preflight needs two things:
 | --- | --- | --- | --- |
 | Specs and mockups | [Lavish](https://github.com/kunchenguid/lavish-axi) (`npx -y lavish-axi`) | Required | Review loop for the spec |
 | Agents | [Paseo](https://paseo.sh) | Required | Agents in git worktrees, parallel builds |
-| CLIs | [AXI](https://axi.md) tools: gh-axi, linear-sdk-axi | Required | Used in place of MCP servers. Use fewer tokens. |
+| CLIs | [AXI](https://axi.md) tools: lavish-axi, and linear-sdk-axi for Linear | Required | Used in place of MCP servers. Use fewer tokens. |
 | Browser | [agent-browser](https://github.com/vercel-labs/agent-browser) | Required | Browser verifier |
 | Git host | `gh` and `git` | Required | Push and PR |
 | Tracker | github | Pluggable | `github`, `linear`, or `none` |
@@ -142,6 +155,7 @@ The init preflight needs two things:
 | Browser option | agent-browser | Pluggable | `agent-browser`, `chrome-devtools-axi`, or `playwright-axi` |
 | Push to phone | ntfy | Optional | Pushover also works. Config is in `~/.config/cook/notify.env`. |
 | Many machines | Tailscale | Optional | Run builds on other machines. Lavish links open on your phone. |
+| UI references | Mobbin (`mobbin-axi`) | Pluggable | `ui_refs: mobbin` or `none` (default). Needs a Mobbin account. |
 | Many accounts | CLI proxy | Optional | Guide only. cook does not use it directly. |
 
 ## Hard rules

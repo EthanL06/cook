@@ -22,6 +22,7 @@ cook reads the file from the main checkout. A build in a worktree uses the same 
 | `review` | `no-mistakes` | The review loop after the PR opens: `no-mistakes`, `greptile` or `none`. |
 | `browser` | `agent-browser` | The browser tool for verifiers: `agent-browser`, `chrome-devtools-axi` or `playwright-axi`. |
 | `specs` | `local` | `local`: the spec stays in git-ignored `.lavish/`, and an exported copy goes on the issue. `committed`: the spec is saved as `docs/specs/<ref>.html` in the PR. |
+| `ui_refs` | `none` | `mobbin`: the spec step shows 3 to 5 real-app references for UI work, with `mobbin-axi` (needs a Mobbin account). `none`: no references. |
 | `notify` | `on` | `off` stops pushes for this project. The push service is set per person, not here (see below). |
 | `commands` | none | Named commands that verifiers and builds use. Common keys: `install`, `dev`, `check`, `test`, `lint`, `build`, `setup`. |
 | `deploy_steps` | none | Path patterns. When a diff touches one, the build writes a deploy-steps comment for a person. |

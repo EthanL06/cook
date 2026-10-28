@@ -36,7 +36,7 @@ Run these from the repo root. Stop at the first problem, tell the user, and give
 2. **GitHub remote.** `git remote get-url origin`. With no remote, cook cannot open a PR. Offer: `gh repo create <owner>/<name> --private --source . --push`. Run it only after the user says yes, and with the name they choose.
 3. **Committed work.** `git status --porcelain`. With uncommitted files, stop: cook builds start from the base branch on `origin`, so they would not see that work. Show the count and the top folders, and ask the user to commit and push. Never commit for them.
 4. **Base on origin.** The base branch exists on `origin` and is not behind the local one.
-5. **Tools.** Run `~/.agents/skills/cook/doctor.sh` (or `~/.claude/skills/cook/doctor.sh`). Missing required tools stop the init. Missing optional tools are a note.
+5. **Tools.** Run `~/.agents/skills/cook/doctor.sh` (or `~/.claude/skills/cook/doctor.sh`). If it exits 1, show the report and ask: "Install the missing tools now?" On yes, run it again with `--fix --yes`. Steps under "Do these yourself" (sign-ins, API keys, accounts) are for the user. A missing required tool stops the init. Optional tools are a note. At the end of step 3, run doctor again on the draft (`COOK_CONFIG=<draft cook.md> doctor.sh`), because the tracker, review loop, browser and `ui_refs` change what is required.
 
 ## 2. Read the repo
 
@@ -50,6 +50,7 @@ Read, do not guess:
 - Deploy config: migrations, `wrangler.*`, `vercel.json`, `fly.toml`, `supabase/`, Docker, `eas.json`, env examples.
 - Design system: Tailwind config, CSS variables, component library, theme files.
 - The tracker: GitHub Issues if the repo has issues, Linear if the docs or branch names show Linear keys, else ask. Default: `github`.
+- UI references: `ui_refs: mobbin` only when the user has Mobbin (`npx --no -- mobbin-axi auth status` says authenticated) and the repo has a UI. Else `none`. Ask when it is not clear.
 
 ## 3. Draft
 

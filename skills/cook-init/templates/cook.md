@@ -9,6 +9,7 @@ review: no-mistakes              # no-mistakes | greptile | none
 browser: agent-browser           # agent-browser | chrome-devtools-axi | playwright-axi
 specs: local                     # local (.lavish/, copy on the issue) | committed (docs/specs/)
 notify: on                       # on | off (the service is set per person in ~/.config/cook/notify.env)
+ui_refs: none                    # mobbin | none: real-app references for UI mockups (needs a Mobbin account)
 commands:
   install: <pnpm install>
   dev: <pnpm dev>                # what verifiers start

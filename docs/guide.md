@@ -71,7 +71,7 @@ Plan to spend most of your time here.
 
 ### Setup
 
-Lavish is a required tool. Run `install.sh doctor` to check it. The `specs` setting in `.agents/cook.md` controls where specs live:
+Lavish is a required tool. Run `doctor.sh` to check it. The `specs` setting in `.agents/cook.md` controls where specs live:
 
 | Value | Result |
 | --- | --- |
@@ -90,7 +90,7 @@ Lavish is a required tool. Run `install.sh doctor` to check it. The `specs` sett
 For UI work, the spec also has:
 
 - Screenshots of the current UI.
-- Research from real apps (`mobbin-axi`, when installed).
+- Research from real apps, with `mobbin-axi` when the project sets `ui_refs: mobbin`.
 - One to four mockup variations. Each one is a working prototype in the design tokens of the project.
 - A state switcher: empty, loading, error, and each role.
 - Viewport and theme switches.
@@ -159,7 +159,7 @@ Paseo makes two worktrees and two agents. Build #42 is in `cook/42-offline-recip
 
 ### What
 
-AXI is a set of CLIs made for agents. cook uses `gh-axi` for GitHub and `linear-sdk-axi` for Linear. See [axi.md](https://axi.md) and the [AXI repo](https://github.com/kunchenguid/axi).
+AXI is a set of CLIs made for agents. cook uses `lavish-axi` for specs, `linear-sdk-axi` for Linear, and, when the project chooses them, `chrome-devtools-axi` or `playwright-axi` for the browser and `mobbin-axi` for UI references. For GitHub, cook calls `gh` directly. For your own agent work, `gh-axi` gives the same data with fewer tokens. See [axi.md](https://axi.md) and the [AXI repo](https://github.com/kunchenguid/axi).
 
 ### Why
 
@@ -167,7 +167,7 @@ An MCP server loads many tool definitions into the context of the agent. An AXI 
 
 ### Setup
 
-AXI tools are required. Run `install.sh doctor` to see which ones you need. A tool runs with `npx -y` if it is not on your PATH. For example:
+Run `doctor.sh --fix`. It checks the AXI tools this project uses and fetches the missing ones into the npx cache, after you say yes. A tool runs with `npx -y` if it is not on your PATH. For example:
 
 ```bash
 npx -y linear-sdk-axi
@@ -181,7 +181,7 @@ tracker: github   # linear | github | none
 
 ### Example
 
-In build #42, the agent reads the issue and later posts the evidence. It does this with `gh-axi`, and it does not need a GitHub MCP server. The agent loads no extra tool definitions, so more context stays free for the code.
+In build #42 on a Linear project, the agent reads the issue and later posts the evidence with `linear-sdk-axi`. It does not need a Linear MCP server. The agent loads no extra tool definitions, so more context stays free for the code.
 
 ---
 

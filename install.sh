@@ -2,7 +2,7 @@
 # Usage: install.sh add [--project <dir>]
 #        install.sh update [--project <dir>]
 #        install.sh remove [--project <dir>]
-#        install.sh doctor
+#        install.sh doctor [--fix [--yes]]
 # Global (default): links each skill in skills/ into ~/.agents/skills and ~/.claude/skills, so a git pull updates them.
 # --project <dir>: copies the skills into <dir>/.agents/skills (to commit and pin a version for a team) and links
 #   <dir>/.claude/skills/<name> to them.
@@ -76,10 +76,10 @@ case "$cmd" in
     echo "Project files (.agents/cook.md, verifiers, recipes) stay. Delete them by hand if you want."
     ;;
   doctor)
-    exec "$KIT/skills/cook/doctor.sh"
+    exec "$KIT/skills/cook/doctor.sh" "$@"
     ;;
   *)
-    echo "usage: install.sh add|update|remove [--project <dir>] | install.sh doctor" >&2
+    echo "usage: install.sh add|update|remove [--project <dir>] | install.sh doctor [--fix [--yes]]" >&2
     exit 1
     ;;
 esac

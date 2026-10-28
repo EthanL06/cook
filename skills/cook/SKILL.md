@@ -30,7 +30,7 @@ T="$S/tracker.sh"                # view, search, create, comment, state, url, br
 - `$S/watch.sh <machine>:<agent-id>:<ref> ...`: the hub's event stream.
 - `$S/cleanup.sh list [ref ...]` and `$S/cleanup.sh run <build> ...`.
 - `/cook-status` (its own skill) shows every build at any time. Use it when the user asks for status.
-- Skills it calls: `cook-verify`, `cook-learn`, `lavish`, `paseo`, the review skill from `cook.md` (`no-mistakes` or a Greptile loop), and `mobbin-axi` if it is installed.
+- Skills it calls: `cook-verify`, `cook-learn`, `lavish`, `paseo`, the review skill from `cook.md` (`no-mistakes` or a Greptile loop), and `mobbin-axi` when `ui_refs: mobbin`.
 
 ## Rules
 
@@ -43,6 +43,7 @@ T="$S/tracker.sh"                # view, search, create, comment, state, url, br
 ## 1. Intake (intake mode)
 
 1. **Config.** Run `$C path`. If there is no `cook.md`, stop and offer `/cook-init`. Do not guess the project facts.
+   **Tools.** Run `$S/doctor.sh --quick`. It is silent and fast when the last check passed. If it exits 1, show its report and ask: "Install the missing tools now?" On yes, run `$S/doctor.sh --fix --yes`. Steps it lists under "Do these yourself" (sign-ins, API keys, accounts) are for the user. Stop until a required one is done. Never type a secret for the user.
 2. **Parse the arguments:** an issue ref or URL, or a prompt; a machine (`on desktop-pc`); a base branch (`from release-2`). The base is `$C get base` unless the user names one. Do not ask about it.
 3. **Read what exists.** With a ref: `$T view <ref>`. With a prompt: `$T search "<key words>"` for a related open issue.
 4. **Machines.** `python3 -I $S/machines.py --origin "$(git remote get-url origin)"`. Skip the machine question when this is the only machine.
@@ -120,7 +121,7 @@ The spec is the longest step. The more exact it is, the less rework the build ne
 
 Open the `comparison` and `input` playbooks too.
 
-1. **Research first.** Screenshots of the current UI at the affected screens. Read the app's design tokens, theme and shared components, so the mockups use the real colors, type, spacing and components. With `mobbin-axi`, show 3 to 5 good production references with one line each.
+1. **Research first.** Screenshots of the current UI at the affected screens. Read the app's design tokens, theme and shared components, so the mockups use the real colors, type, spacing and components. When `$C get ui_refs` is `mobbin`, use `mobbin-axi` to show 3 to 5 good production references with one line each. With `none`, skip the references and say so in the spec.
 2. **Variations** from the intake answer. Each is a different direction (layout, flow or interaction model), with real copy and realistic data. For each: a name, the idea in one sentence, pros, cons and the open questions it adds. Mark the recommended one and say why.
 3. **Working prototypes** when there is interaction, with a state switcher (empty, loading, filled, long content, error, success, disabled, roles), a viewport switch and a light and dark switch when the app has dark mode. Keep the state when the user changes the variation.
 4. **Compare views:** all variations side by side in one state, one at full size, and current versus proposed.
