@@ -16,42 +16,56 @@ if [ "${1:-}" = --project ]; then
   [ -n "${2:-}" ] || { echo "--project needs a folder" >&2; exit 1; }
   project="$(cd "$2" 2>/dev/null && pwd -P)" || { echo "no such folder: $2" >&2; exit 1; }
 fi
-skills=$(cd "$KIT/skills" && ls -d */ | tr -d /)
 rc=0
 
+# Read after "git pull", so an update installs the skills of the new version.
+kit_skills() { (cd "$KIT/skills" && for d in */; do echo "${d%/}"; done); }
 ours() { [ -L "$1" ] && case "$(readlink "$1")" in "$KIT"/*) return 0 ;; esac; [ -f "$1/.cook-kit" ]; }
+taken() { { [ -e "$1" ] || [ -L "$1" ]; } && ! ours "$1"; }
+in_kit() { [ -d "$KIT/skills/$1" ]; }
 
 link_global() {
   local dir=$1 s
   mkdir -p "$dir"
-  for s in $skills; do
-    if [ -e "$dir/$s" ] && ! ours "$dir/$s"; then
+  for s in $(kit_skills); do
+    if taken "$dir/$s"; then
       echo "  skipped $dir/$s: a skill with this name is already there"; rc=2; continue
     fi
     ln -sfn "$KIT/skills/$s" "$dir/$s"
     echo "  linked  $dir/$s"
+  done
+  for s in "$dir"/*; do
+    [ -L "$s" ] && ours "$s" && ! in_kit "$(basename "$s")" && { rm "$s"; echo "  removed $s: the kit has no such skill now"; }
   done
 }
 
 copy_project() {
   local s dst="$project/.agents/skills" links="$project/.claude/skills"
   mkdir -p "$dst" "$links"
-  for s in $skills; do
-    if [ -e "$dst/$s" ] && ! ours "$dst/$s"; then
+  for s in $(kit_skills); do
+    if taken "$dst/$s"; then
       echo "  skipped $dst/$s: a skill with this name is already there"; rc=2; continue
     fi
     rm -rf "${dst:?}/${s:?}"
     cp -R "$KIT/skills/$s" "$dst/$s"
     git -C "$KIT" rev-parse --short HEAD >"$dst/$s/.cook-kit" 2>/dev/null || echo unknown >"$dst/$s/.cook-kit"
-    if [ -L "$links/$s" ] || ! [ -e "$links/$s" ]; then ln -sfn "../../.agents/skills/$s" "$links/$s"; fi
     echo "  copied  $dst/$s"
+    if [ -L "$links/$s" ] || ! [ -e "$links/$s" ]; then ln -sfn "../../.agents/skills/$s" "$links/$s"
+    else echo "  skipped $links/$s: a skill with this name is already there"; rc=2
+    fi
+  done
+  for s in "$dst"/*; do
+    [ -f "$s/.cook-kit" ] && ! in_kit "$(basename "$s")" || continue
+    rm -rf "$s"
+    [ "$(readlink "$links/$(basename "$s")")" = "../../.agents/skills/$(basename "$s")" ] && rm "$links/$(basename "$s")"
+    echo "  removed $s: the kit has no such skill now"
   done
 }
 
 unlink_all() {
   local dir s
   for dir in "$@"; do
-    for s in $skills; do
+    for s in $(kit_skills); do
       if [ -L "$dir/$s" ] && ours "$dir/$s"; then rm "$dir/$s"; echo "  removed $dir/$s"
       elif [ -L "$dir/$s" ] && [ "$(readlink "$dir/$s")" = "../../.agents/skills/$s" ]; then rm "$dir/$s"; echo "  removed $dir/$s"
       elif [ -d "$dir/$s" ] && [ -f "$dir/$s/.cook-kit" ]; then rm -rf "${dir:?}/${s:?}"; echo "  removed $dir/$s"
