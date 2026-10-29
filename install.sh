@@ -55,7 +55,7 @@ copy_project() {
     fi
   done
   for s in "$dst"/*; do
-    [ -f "$s/.cook-kit" ] && ! in_kit "$(basename "$s")" || continue
+    if [ ! -f "$s/.cook-kit" ] || in_kit "$(basename "$s")"; then continue; fi
     rm -rf "$s"
     [ "$(readlink "$links/$(basename "$s")")" = "../../.agents/skills/$(basename "$s")" ] && rm "$links/$(basename "$s")"
     echo "  removed $s: the kit has no such skill now"

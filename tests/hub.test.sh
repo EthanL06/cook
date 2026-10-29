@@ -1,3 +1,4 @@
+# shellcheck shell=bash disable=SC2154 # out, rc and the sandbox paths come from tests/lib.sh
 # The hub side: watch.sh, doctor.sh and machines.py.
 
 # bounded <cmd>: runs it, and stops it after 30 seconds, so a watch that never ends fails the test instead of hanging.

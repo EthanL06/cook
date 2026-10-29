@@ -10,6 +10,7 @@
 # Exit codes: 0 reported, 1 bad arguments, 2 not inside a Paseo agent, 3 label update failed, 4 event file not written,
 #   5 refused because the spec is approved already, 6 run state not written.
 set -u
+# shellcheck source=lib.sh
 . "$(dirname "$0")/lib.sh"
 opts=()
 while [ "$#" -gt 0 ]; do

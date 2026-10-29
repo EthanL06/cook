@@ -17,6 +17,7 @@
 # Exit codes: 0 resumed or listed, 1 bad arguments, 2 no run state matches, 3 the machine does not answer,
 #   4 the worktree or branch is not safe to use, 5 uncommitted changes, 6 an agent is at work, 7 paseo failed.
 set -u
+# shellcheck source=lib.sh
 . "$(dirname "$0")/lib.sh"
 RUN="python3 -I $COOK_LIB_DIR/run.py"
 
@@ -112,7 +113,7 @@ picked=$($RUN pick "$want" <<<"$(grep -v '^DOWN	' <<<"$all")") || {
 m=${picked%%$'\t'*}
 js=${picked#*$'\t'}
 j() { jq -r "$1 // empty" <<<"$js"; }
-ref=$(j .ref) id=$(j .agent_id) cwd=$(j .cwd) repo=$(j .repo) branch=$(j .branch) sha=$(j .head) key=$(j .key)
+ref=$(j .ref) id=$(j .agent_id) cwd=$(j .cwd) repo=$(j .repo) branch=$(j .branch) sha=$(j .head)
 [ "$(j .step)" = ready ] && { echo "$ref is done: its PR is ready ($(j .pr)). Nothing to resume. Send review fixes to the agent in Paseo."; exit 0; }
 
 p=$(on "$m" "$PROBE" "$cwd" "$repo" "$branch" "$sha" 2>/dev/null)

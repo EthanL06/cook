@@ -1,3 +1,4 @@
+# shellcheck shell=bash disable=SC2154 # out, rc and the sandbox paths come from tests/lib.sh
 # resume.sh: continue a build after the agent or the machine stopped.
 
 ID=agent-1111-aaaa
@@ -27,6 +28,7 @@ rep() {
   if [ "$M" = local ]; then
     (cd "$w" && PASEO_AGENT_ID=${AGENT:-$ID} "$S/report.sh" "$@") >/dev/null || fail "report.sh $*"
   else
+    # shellcheck disable=SC2029 # the test paths are the same on both sides
     ssh "$M" "cd $w && PASEO_AGENT_ID=${AGENT:-$ID} $S/report.sh $q" >/dev/null || fail "report.sh $*"
   fi
 }

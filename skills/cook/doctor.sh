@@ -29,7 +29,8 @@ ui_refs=$(cfg ui_refs none) notify=$(cfg notify on)
 
 state="${XDG_STATE_HOME:-$HOME/.local/state}/cook"
 stamp="$state/doctor.ok"
-key="$(cd "$here" && git rev-parse HEAD 2>/dev/null || cat "$here/.cook-kit" 2>/dev/null) $cookmd $( [ -n "$cookmd" ] && cksum <"$cookmd")"
+kit=$(git -C "$here" rev-parse HEAD 2>/dev/null) || kit=$(cat "$here/.cook-kit" 2>/dev/null)
+key="$kit $cookmd $( [ -n "$cookmd" ] && cksum <"$cookmd")"
 if [ "$quick" = 1 ] && [ -f "$stamp" ] && [ "$(cat "$stamp")" = "$key" ] && [ -z "$(find "$stamp" -mmin +1440)" ]; then
   echo "doctor: ok (checked in the last 24 hours)"
   exit 0

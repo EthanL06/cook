@@ -8,6 +8,7 @@
 # Exit codes: 0 shown, 1 bad arguments, 2 no build matches the ref.
 set -u
 here="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=../cook/lib.sh
 . "$here/../cook/lib.sh"
 
 ref="" watch=0

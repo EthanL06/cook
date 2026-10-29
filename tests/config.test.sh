@@ -1,3 +1,4 @@
+# shellcheck shell=bash disable=SC2154 # out, rc and the sandbox paths come from tests/lib.sh
 # config.py, and how tracker.sh, notify.sh and doctor.sh act on a missing or invalid .agents/cook.md.
 
 C() { python3 -I "$S/config.py" "$@"; }

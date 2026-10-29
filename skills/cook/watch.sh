@@ -7,6 +7,7 @@
 # COOK_WATCH_INTERVAL seconds between polls (default 60). The seen lines are kept in COOK_WATCH_DIR, so a restart prints no line twice.
 # Exit codes: 0 done, 1 bad arguments.
 set -u
+# shellcheck source=lib.sh
 . "$(dirname "$0")/lib.sh"
 [ "$#" -gt 0 ] || { echo "usage: watch.sh <machine>:<agent-id>:<ref> ..." >&2; exit 1; }
 

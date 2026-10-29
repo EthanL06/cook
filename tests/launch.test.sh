@@ -1,3 +1,4 @@
+# shellcheck shell=bash disable=SC2154 # out, rc and the sandbox paths come from tests/lib.sh
 # launch.sh: start a build agent, with branch conflicts and failed launches.
 
 brief() { printf 'COOK BUILD - read the cook skill and do steps 4 to 10.\n\nIssue: #42 Save recipes offline\n' >"$T/brief.md"; }

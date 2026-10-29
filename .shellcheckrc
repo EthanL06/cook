@@ -1,0 +1,4 @@
+external-sources=true
+source-path=SCRIPTDIR
+# The scripts that run on another machine are single-quoted strings on purpose: they expand there, not here.
+disable=SC2016

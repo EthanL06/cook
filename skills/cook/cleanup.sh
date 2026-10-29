@@ -14,6 +14,7 @@
 #   and run state. A build on a machine that does not answer is skipped. It never touches the issue, the PR or the remote branch.
 # Exit codes: 0 done, 1 bad arguments, 2 one or more builds were skipped or a step failed.
 set -u
+# shellcheck source=lib.sh
 . "$(dirname "$0")/lib.sh"
 mode=${1:-}; shift 2>/dev/null
 case "$mode" in list|run) ;; *) mode= ;; esac

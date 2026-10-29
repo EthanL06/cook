@@ -1,3 +1,4 @@
+# shellcheck shell=bash disable=SC2154 # out, rc and the sandbox paths come from tests/lib.sh
 # install.sh: add, update and remove, global and --project.
 
 # A clone of this kit with a bare origin, so "update" can pull. Prints nothing. The clone is $T/kit.

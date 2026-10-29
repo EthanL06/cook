@@ -1,3 +1,4 @@
+# shellcheck shell=bash disable=SC2154 # out, rc and the sandbox paths come from tests/lib.sh
 # /cook-status: status.sh and status.py, from Paseo labels, event logs and the run state.
 
 status() { run env COOK_MACHINES="${MACHINES:-local}" "$KIT/skills/cook-status/status.sh" "$@"; }

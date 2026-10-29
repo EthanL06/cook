@@ -1,0 +1,28 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck and jq
+        run: |
+          if [ "$RUNNER_OS" = macOS ]; then
+            brew install shellcheck jq
+          else
+            sudo apt-get update -q && sudo apt-get install -y -q shellcheck jq
+          fi
+      - name: Show tool versions
+        run: bash --version | head -n 1; git --version; python3 --version; jq --version; shellcheck --version | sed -n 2p
+      - name: Run shellcheck and the tests
+        run: tests/run.sh

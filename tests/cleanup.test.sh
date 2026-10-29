@@ -1,3 +1,4 @@
+# shellcheck shell=bash disable=SC2154 # out, rc and the sandbox paths come from tests/lib.sh
 # cleanup.sh: verdicts, and removal that never loses uncommitted or unpushed work.
 
 # build <id> <ref> <branch> [machine]: a worktree with one pushed commit, its agent and one event. Sets r and w.

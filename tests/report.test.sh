@@ -1,3 +1,4 @@
+# shellcheck shell=bash disable=SC2154 # out, rc and the sandbox paths come from tests/lib.sh
 # report.sh and run.py: step labels, event lines, and the run state of a build through its steps.
 
 ID=agent-1111-aaaa
@@ -61,7 +62,7 @@ test_first_report_saves_the_build_facts() {
   assert_eq "$(state .origin)" "https://github.com/acme/app.git" origin
   cmp -s "$(state .brief)" "$T/brief.md" || fail "the brief copy differs"
   [ "$(wc -l <"$HOME/.local/state/cook/runs/app-42.json" | tr -d ' ')" = 1 ] || fail "the state is not one line"
-  ls -a "$HOME/.local/state/cook/runs" | grep -q '^\.app' && fail "a temp file is left"
+  for f in "$HOME"/.local/state/cook/runs/.app*; do [ -e "$f" ] && fail "a temp file is left: $f"; done
   true
 }
 

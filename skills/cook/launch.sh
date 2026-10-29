@@ -13,6 +13,7 @@
 # Exit codes: 0 started, 1 bad arguments, 3 the machine or its Paseo daemon does not answer,
 #   4 no checkout or no base branch on origin, 5 the branch is in use or differs from origin, 6 paseo run failed.
 set -u
+# shellcheck source=lib.sh
 . "$(dirname "$0")/lib.sh"
 
 m="" repo="" ref="" title="" branch="" base="" brief="" extra=()

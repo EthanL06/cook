@@ -4,7 +4,8 @@
 # and a PATH that holds only the stubs in tests/stubs and the real tools that the scripts need.
 # A pattern runs only the tests whose "<file>/<function>" name contains it. -v prints the output of each test.
 # -j runs that many tests at the same time (default: the number of CPUs).
-# Exit codes: 0 every test passed, 1 a test failed, 2 a required tool is missing.
+# Without a pattern, it runs shellcheck on every shell file first, when shellcheck is installed. CI installs it.
+# Exit codes: 0 every test passed, 1 a test or shellcheck failed, 2 a required tool is missing.
 set -u
 TESTS="$(cd "$(dirname "$0")" && pwd -P)"
 KIT="$(dirname "$TESTS")"
@@ -52,6 +53,20 @@ for t in bash git python3 jq; do
   [ -e "$COOK_TESTS_REAL/$t" ] || { echo "tests need $t" >&2; exit 2; }
 done
 
+lint=0
+if [ "$#" = 0 ]; then
+  if command -v shellcheck >/dev/null 2>&1; then
+    files=()
+    while IFS= read -r f; do
+      case "$(head -n 1 "$f")" in *python*) continue ;; esac
+      files+=("$f")
+    done < <(find "$KIT" -path "$KIT/.git" -prune -o -type f \( -name '*.sh' -o -path "$KIT/tests/stubs/*" \) -print | sort)
+    if shellcheck "${files[@]}"; then echo "ok    shellcheck (${#files[@]} files)"; else echo "FAIL  shellcheck"; lint=1; fi
+  else
+    echo "skip  shellcheck: it is not installed"
+  fi
+fi
+
 n=0
 : >"$work/list"
 for f in "$TESTS"/*.test.sh; do
@@ -84,4 +99,4 @@ done <"$work/list"
 
 echo
 echo "$pass passed, $nfail failed"
-[ "$nfail" = 0 ]
+[ "$nfail" = 0 ] && [ "$lint" = 0 ]
