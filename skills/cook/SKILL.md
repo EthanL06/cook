@@ -25,6 +25,7 @@ T="$S/tracker.sh"                # view, search, create, comment, state, url, br
 ```
 
 - `$S/machines.py [--origin <remote>] [--json]`: the machines that can run the build and what each one is missing. Without Tailscale, only this machine.
+- `$S/launch.sh --machine <m> --repo <checkout> --ref <ref> --title <title> --branch <b> --base <base> --brief <file> [-- <paseo flags>]`: checks the machine and the branch, then starts the build agent.
 - `$S/report.sh <step> <ref> "<text>" [url]`: the build agent tells the hub its step. Steps: `plan build verify review learn blocked ready`.
 - `$S/notify.sh plan|blocked|ready <ref> "<message>" [url]`: the phone push (ntfy or Pushover, from `~/.config/cook/notify.env`). Exit 3 means pushes are not set up. Say so once and continue.
 - `$S/watch.sh <machine>:<agent-id>:<ref> ...`: the hub's event stream.
@@ -64,26 +65,30 @@ T="$S/tracker.sh"                # view, search, create, comment, state, url, br
 - No issue and the tracker is not `none`: write a short issue body (problem, done checks, out of scope) to a scratch file, then `$T create "<title>" <file>`. Use the ref it prints.
 - With tracker `none`, the ref is a short slug of the prompt (`csv-export`).
 - **Branch:** use `$T branch <ref>` when the tracker has one. Else fill `$C get branch` (placeholders: `{type}` feat, fix, chore...; `{slug}` 2 to 5 words; `{id}` the issue number or key, lowercase; `{user}` the GitHub login). If `cook.md` sets `branch_max`, cut the slug to fit and tell the user the name.
-- If the branch already exists on `origin`, the build continues on it. Say so.
+- If the branch already exists, `launch.sh` continues on it (step 3) and says so in its `note`. Tell the user.
 
 ## 3. Start the build agent (intake mode)
 
 Every build runs in a Paseo worktree, also on this machine. `H` is empty for this machine and `--host ssh://<machine>` for another (`paseoHost` in `machines.py --json`). `R` is the machine's checkout (`repo`).
 
 1. Write the brief from `$S/templates/brief.md` to a scratch file: every intake answer word for word, the issue ref, URL and title, branch, base, machine, and its Tailscale DNS name and IP.
-2. `git -C "$R" fetch origin <base>` (over `ssh <machine>` for another machine).
-3. Pick the provider and model with the `paseo` skill (configured profiles first). Run the agent with no permission prompts: `--mode bypassPermissions` for Claude, `--mode full-access` for Codex, unless the user asks for another mode.
-4. Start it. The title must start with the ref, because status and cleanup read the ref from it:
+2. Pick the provider and model with the `paseo` skill (configured profiles first). Run the agent with no permission prompts: `--mode bypassPermissions` for Claude, `--mode full-access` for Codex, unless the user asks for another mode.
+3. Start it with `launch.sh`. It fetches the base, checks the branch, and starts the agent with the title `<ref>: <title>` and the `cook` labels that status, resume and cleanup read:
    ```sh
-   paseo $H run --no-wait --title "<ref>: <title>" <provider and mode flags> \
-     --cwd "$R" --new-workspace worktree --worktree-mode branch-off \
-     --new-branch "<branch>" --base "origin/<base>" \
-     --label "cook=<ref>" --label "cook-step=plan" "$(cat <brief file>)"
+   $S/launch.sh --machine <machine or local> --repo "$R" --ref <ref> --title "<title>" \
+     --branch <branch> --base <base> --brief <brief file> -- <provider and mode flags>
    ```
-   For an existing branch: `--worktree-mode checkout-branch --branch "<branch>"`, without `--new-branch` and `--base`.
-5. Tell the user the machine, the agent ID, the branch, and how to open it (the Paseo app, or `paseo $H attach <agent-id>`). Then **Watch**.
+   It prints `build=<machine>:<agent-id>:<ref>`, `mode` (`new`, `origin` or `local`) and a `note`.
+4. Tell the user the machine, the agent ID, the branch, the `note`, and how to open it (the Paseo app, or `paseo $H attach <agent-id>`). Then **Watch**.
 
-If `paseo` cannot reach the machine, stop and tell the user.
+When `launch.sh` fails, nothing has started. Tell the user what it printed and stop:
+
+| Exit | Meaning | What to offer |
+| --- | --- | --- |
+| 3 | The machine or its Paseo daemon does not answer. | Another machine, or wait until it is back. |
+| 4 | No checkout on that machine, or the base is not on `origin`. | Clone the repo there, or another base. |
+| 5 | The branch is checked out in another worktree, or local and `origin` differ. | `/cook resume <ref>` when a build already uses it, else another branch name. |
+| 6 | `paseo run` failed (for example the provider is not signed in). | Fix what it says, then start again. |
 
 ## Watch (hub)
 
