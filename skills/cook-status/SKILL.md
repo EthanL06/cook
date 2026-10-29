@@ -13,10 +13,10 @@ S="$(cd "$(dirname "$(readlink -f ~/.agents/skills/cook-status/SKILL.md 2>/dev/n
 "$S/status.sh" [ref]
 ```
 
-- No argument: one row per build on every machine (Tailscale peers too), then a line that says how many builds wait on the user and which one waits longest.
-- A ref (`#42`, `ENG-123`, a slug, or the start of an agent ID): that build's step, links (spec, PR) and its last 10 events, and how long the step usually takes in this repo. It never guesses a finish time.
+- No argument: one row per build on every machine (Tailscale peers too), then a line that says how many builds wait on the user and which one waits longest. A build whose agent is gone (a crash or a restart) waits on `you (resume)`: `/cook resume <ref>` continues it.
+- A ref (`#42`, `ENG-123`, a slug, or the start of an agent ID): that build's step, its branch and head, the approved spec, the last verify result, links (spec, PR), its last 10 events, and how long the step usually takes in this repo. It never guesses a finish time.
 - `--watch` redraws every 10 seconds (`COOK_STATUS_INTERVAL`). It is for a terminal. In an agent session, run it once.
 
 After the table, for each build that waits on the user, add one line with what to do: open the spec link (`plan`), send the `Next:` reply in the build agent (`blocked`), or review the PR (`ready`).
 
-The script only reads event logs, Paseo step labels and agent titles. It never sends a message to a build agent, so it does not slow a build.
+The script only reads event logs, run state, Paseo step labels and agent titles. It never sends a message to a build agent, so it does not slow a build.
