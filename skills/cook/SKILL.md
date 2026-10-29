@@ -1,7 +1,7 @@
 ---
 name: cook
-description: Take one issue or prompt to a pull request that is ready for review. Asks the intake questions, makes or reads the issue, starts a Paseo agent in a fresh worktree, iterates a Lavish spec with mockups until the user approves, then builds, runs /cook-verify, opens the PR, runs the review loop and /cook-learn, and sends a push when it is blocked or ready. The invoking session stays a hub that reports every build. On "cleanup" it removes merged builds after the user approves. Never merges or force-pushes. Use when the user invokes /cook, or asks the hub to clean up builds.
-argument-hint: "[#42 | ENG-123 | issue URL | prompt] [on <machine>] [from <branch>] | cleanup [ref ...]"
+description: Take one issue or prompt to a pull request that is ready for review. Asks the intake questions, makes or reads the issue, starts a Paseo agent in a fresh worktree, iterates a Lavish spec with mockups until the user approves, then builds, runs /cook-verify, opens the PR, runs the review loop and /cook-learn, and sends a push when it is blocked or ready. The invoking session stays a hub that reports every build. On "resume" it continues a build that stopped (agent crash, machine restart) from its saved step. On "cleanup" it removes merged builds after the user approves. Never merges or force-pushes. Use when the user invokes /cook, or asks the hub to resume or clean up builds.
+argument-hint: "[#42 | ENG-123 | issue URL | prompt] [on <machine>] [from <branch>] | resume [ref] | cleanup [ref ...]"
 ---
 
 # cook
@@ -14,6 +14,8 @@ Modes:
 
 - **Intake** (the user typed `/cook ...`): steps 1 to 3, then **Watch**. This session becomes a hub. It can start more builds, on any machine, and it reports what each build does.
 - **Build** (the prompt starts with `COOK BUILD`): steps 4 to 10, in the Paseo agent that step 3 starts. Skip the intake. Take every answer from the brief.
+- **Continue** (the prompt or a message starts with `COOK RESUME`): in a build agent. Go to the step that the message names and do the steps from there. Its rules are in **Continue a build**.
+- **Resume** (the user types `/cook resume [ref]`, or asks to continue a build that stopped): **Resume**, in the hub.
 - **Cleanup** (the user says "clean up", types `/cook cleanup [ref ...]`, or accepts a cleanup suggestion): **Cleanup**, in the hub. It never starts by itself.
 
 Helpers in this skill folder:
@@ -30,6 +32,7 @@ T="$S/tracker.sh"                # view, search, create, comment, state, url, br
 - `$S/run.py get <ref> [field]`: read the run state of a build.
 - `$S/notify.sh plan|blocked|ready <ref> "<message>" [url]`: the phone push (ntfy or Pushover, from `~/.config/cook/notify.env`). Exit 3 means pushes are not set up. Say so once and continue.
 - `$S/watch.sh <machine>:<agent-id>:<ref> ...`: the hub's event stream.
+- `$S/resume.sh [<ref> [--dirty-ok] [--new-worktree] [--dry-run] [-- <paseo flags>]]`: lists the builds that can continue, or continues one.
 - `$S/cleanup.sh list [ref ...]` and `$S/cleanup.sh run <build> ...`.
 - `/cook-status` (its own skill) shows every build at any time. Use it when the user asks for status.
 - Skills it calls: `cook-verify`, `cook-learn`, `lavish`, `paseo`, the review skill from `cook.md` (`no-mistakes` or a Greptile loop), and `mobbin-axi` when `ui_refs: mobbin`.
@@ -104,6 +107,33 @@ Keep the list of builds this session started as `<machine>:<agent-id>:<ref>`.
 
 The build agent answers its own questions. The hub only reports and allows permission requests.
 
+## Resume (hub)
+
+A build can stop before it is done: the agent crashed, the machine restarted, or verify failed again and again. Its run state (`~/.local/state/cook/runs/` on the build machine) keeps the step, the agent, the worktree, the approved spec and the last receipt. Resume continues the build from that step. The user does not start it again.
+
+1. `/cook resume` with no ref: run `$S/resume.sh` and show its table. For each build, say what resume will do: send the idle agent a message, or start a new agent (agent `gone`).
+2. With a ref: run `$S/resume.sh <ref>`. It checks the worktree, the branch and the agent, then sends the brief to the agent if it is idle, or starts a new agent in the same worktree. Give the user the result in one line, put the new build string in the watch list in place of the old one, and restart `watch.sh`.
+3. When the old agent is gone from Paseo, `resume.sh` cannot read its provider. Pick one as in step 3, and pass the flags after `--`.
+4. When it stops, nothing changed. Act on the exit code:
+
+| Exit | Meaning | What to do |
+| --- | --- | --- |
+| 3 | The machine does not answer. | Tell the user. Try again when it is back. |
+| 4 | The worktree is gone, on another branch, or its head lost the saved commit. | Show the message. When it offers `--new-worktree`, ask the user, and on yes run it again with that flag. Else stop. Never reset, delete or make a branch yourself. |
+| 5 | The worktree has uncommitted changes. | Show the files. Ask: "Continue with these changes kept?" On yes, run it again with `--dirty-ok`. Never stash, clean or check out files. |
+| 6 | The agent is still at work, or another agent works in the worktree. | Say so. Nothing to resume. |
+| 7 | `paseo` failed. | Show the message. |
+
+## Continue a build (build mode)
+
+A `COOK RESUME` message names the step to continue from, the copy of the original brief, the approved spec, the last receipt and the head commit.
+
+1. Run the `report.sh` command that the message gives first.
+2. Read the original brief, `git log origin/<base>..HEAD`, `git status`, and the PR comments if there is a PR. Do not redo work that is there.
+3. An approved spec is final. Build exactly that spec. Never go back to step 4, and never ask for approval again. `report.sh` refuses a `plan` report after approval.
+4. Keep uncommitted changes that the message lists. Read them, and commit what belongs to this build.
+5. Continue at the step: 4 (spec loop, from the last draft), 5, 6 (read the last receipt first, then verify again with fresh evidence), 7, 8, 9 or 10.
+
 ## Cleanup (hub)
 
 A build leaves its agent, worktree, local branch, the processes it started and its event log. Cleanup removes them. It never touches the issue, the PR, the remote branch, other worktrees or `origin`.
@@ -118,7 +148,7 @@ A build leaves its agent, worktree, local branch, the processes it started and i
 The spec is the longest step. The more exact it is, the less rework the build needs.
 
 1. Write your brief (the prompt that started you, word for word) to a scratch file, then `$S/report.sh --brief <file> plan <ref> "Reading the code."`. Then read the issue, `cook.md`, `AGENTS.md` and the nested ones in the area, `.agents/recipes/README.md` and the recipes that apply, and the code. Find the active code path, not a dead copy. Read-only subagents can research in parallel.
-2. Write the spec at the place `$C get specs` names: `local` is `.lavish/cook-spec.html` (git-ignored), `committed` is `docs/specs/<ref>.html`. Use the `lavish` skill and its `plan` playbook: done checks, approach, files to change, how the work splits (step 5), the verification and evidence plan, out of scope, risks and open questions with answer controls. For UI work, add **Mockups** below.
+2. Write the spec at the place `$C get specs` names: `local` is `.lavish/cook-spec.html`, `committed` is `docs/specs/<ref>.html`. With `local`, keep `.lavish/` out of git: if `git check-ignore -q .lavish/` fails, add `.lavish/` to `$(git rev-parse --git-common-dir)/info/exclude`. A file that git does not ignore makes the worktree dirty, and then `/cook resume` and cleanup stop. Use the `lavish` skill and its `plan` playbook: done checks, approach, files to change, how the work splits (step 5), the verification and evidence plan, out of scope, risks and open questions with answer controls. For UI work, add **Mockups** below.
 3. On a machine that is not the user's, the link must open from the user's devices. Before the first `lavish-axi` command, `export LAVISH_AXI_ALLOWED_HOSTS=<tailscale name>,<tailscale DNS name>,<tailscale IP>` (`npx -y lavish-axi stop` first if a server runs). Give the URL with the Tailscale name.
 4. Open it, `$S/report.sh plan <ref> "Spec v1 is ready to review." <url>`, `$S/notify.sh plan <ref> "Spec is ready to review." <url>`, then poll for feedback (`npx -y lavish-axi poll <file>`).
 5. Apply each round of feedback, `$S/report.sh plan <ref> "Spec v<n>: <what changed>." <url>`, and poll again with `--agent-reply`. Start coding only when the feedback says "approve". A question is not approval.

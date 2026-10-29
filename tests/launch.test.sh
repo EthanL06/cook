@@ -9,7 +9,6 @@ launch() {
 }
 
 new_id() { kv agent "$out"; }
-. "$S/lib.sh"
 
 test_new_branch_branches_off_origin_base() {
   r=$(new_repo app)

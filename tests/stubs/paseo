@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Test stub for the paseo CLI. Agents live in $STUB_STATE/paseo/<host>/<id>.json.
+The default host is $STUB_HOST (set by the ssh stub), else "local".
 
 Fault injection:
   $STUB_STATE/down/<host>               the daemon on <host> cannot be reached
@@ -18,7 +19,7 @@ args = sys.argv[1:]
 with open(S / "calls.log", "a") as f:
     f.write("paseo " + " ".join(args) + "\n")
 
-host = "local"
+host = os.environ.get("STUB_HOST", "local")
 if args[:1] == ["--host"]:
     host = args[1].removeprefix("ssh://")
     args = args[2:]

@@ -14,7 +14,7 @@ Last verification: {verify}
 PR: {pr}
 Worktree changes: {tree}
 
-First, report that you continue: $S/report.sh {step_report} {ref} "Resumed at {step}." Then:
+First, report that you continue: $S/report.sh {step_report} "{ref}" "Resumed at {step}." Then:
 - Read the original brief. Its intake answers still hold.
 - Check the commits on the branch (git log origin/{base}..HEAD) and, if there is a PR, its comments. Do not redo work that is in them.
 - Verification needs fresh evidence. Never reuse a PASS from before a code change.

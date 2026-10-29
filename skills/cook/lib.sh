@@ -47,3 +47,11 @@ cook_events() {
   local f=".local/state/cook/events/$2.log"
   if [ "$1" = local ]; then cat "$COOK_STATE/events/$2.log" 2>/dev/null; else ssh -o BatchMode=yes -o ConnectTimeout=10 "$1" "cat $f" 2>/dev/null; fi
 }
+
+# The run state of each build on a machine (see run.py): one line of JSON per build.
+cook_runs() {
+  if [ "$1" = local ]; then cat "$COOK_STATE"/runs/*.json 2>/dev/null; else ssh -o BatchMode=yes -o ConnectTimeout=10 "$1" "cat .local/state/cook/runs/*.json" 2>/dev/null; fi
+}
+
+# Exit 0 when the machine answers. "local" always does.
+cook_up() { [ "$1" = local ] || on "$1" 'echo ok' >/dev/null 2>&1; }

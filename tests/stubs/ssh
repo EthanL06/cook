@@ -17,4 +17,4 @@ fi
 h="$STUB_HOSTS/$host"
 mkdir -p "$h"
 cd "$h" || exit 255
-exec env -u COOK_STATE HOME="$h" XDG_CONFIG_HOME="$h/.config" XDG_STATE_HOME="$h/.local/state" bash -c "$*"
+exec env -u COOK_STATE STUB_HOST="$host" HOME="$h" XDG_CONFIG_HOME="$h/.config" XDG_STATE_HOME="$h/.local/state" bash -c "$*"

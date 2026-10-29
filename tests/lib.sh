@@ -2,6 +2,8 @@
 # Helpers for the tests. tests/run.sh sources this file in each sandbox, then the test file, then runs one test.
 # Globals from run.sh: KIT (this repo), T (the sandbox), STUB_STATE, STUB_HOSTS.
 S="$KIT/skills/cook"
+# shellcheck source=../skills/cook/lib.sh
+. "$S/lib.sh"
 
 sandbox() {
   case "$HOME" in "$T"/*) ;; *) echo "HOME is not in the sandbox" >&2; exit 1 ;; esac
