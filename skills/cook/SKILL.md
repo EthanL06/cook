@@ -26,7 +26,8 @@ T="$S/tracker.sh"                # view, search, create, comment, state, url, br
 
 - `$S/machines.py [--origin <remote>] [--json]`: the machines that can run the build and what each one is missing. Without Tailscale, only this machine.
 - `$S/launch.sh --machine <m> --repo <checkout> --ref <ref> --title <title> --branch <b> --base <base> --brief <file> [-- <paseo flags>]`: checks the machine and the branch, then starts the build agent.
-- `$S/report.sh <step> <ref> "<text>" [url]`: the build agent tells the hub its step. Steps: `plan build verify review learn blocked ready`.
+- `$S/report.sh [--brief <f>] [--spec <f>] [--receipt <f>] <step> <ref> "<text>" [url]`: the build agent tells the hub its step, and saves the build's run state (`~/.local/state/cook/runs/`) so `/cook resume` can continue it. Steps: `plan build verify review learn blocked ready`.
+- `$S/run.py get <ref> [field]`: read the run state of a build.
 - `$S/notify.sh plan|blocked|ready <ref> "<message>" [url]`: the phone push (ntfy or Pushover, from `~/.config/cook/notify.env`). Exit 3 means pushes are not set up. Say so once and continue.
 - `$S/watch.sh <machine>:<agent-id>:<ref> ...`: the hub's event stream.
 - `$S/cleanup.sh list [ref ...]` and `$S/cleanup.sh run <build> ...`.
@@ -116,12 +117,12 @@ A build leaves its agent, worktree, local branch, the processes it started and i
 
 The spec is the longest step. The more exact it is, the less rework the build needs.
 
-1. `$S/report.sh plan <ref> "Reading the code."` Then read the issue, `cook.md`, `AGENTS.md` and the nested ones in the area, `.agents/recipes/README.md` and the recipes that apply, and the code. Find the active code path, not a dead copy. Read-only subagents can research in parallel.
+1. Write your brief (the prompt that started you, word for word) to a scratch file, then `$S/report.sh --brief <file> plan <ref> "Reading the code."`. Then read the issue, `cook.md`, `AGENTS.md` and the nested ones in the area, `.agents/recipes/README.md` and the recipes that apply, and the code. Find the active code path, not a dead copy. Read-only subagents can research in parallel.
 2. Write the spec at the place `$C get specs` names: `local` is `.lavish/cook-spec.html` (git-ignored), `committed` is `docs/specs/<ref>.html`. Use the `lavish` skill and its `plan` playbook: done checks, approach, files to change, how the work splits (step 5), the verification and evidence plan, out of scope, risks and open questions with answer controls. For UI work, add **Mockups** below.
 3. On a machine that is not the user's, the link must open from the user's devices. Before the first `lavish-axi` command, `export LAVISH_AXI_ALLOWED_HOSTS=<tailscale name>,<tailscale DNS name>,<tailscale IP>` (`npx -y lavish-axi stop` first if a server runs). Give the URL with the Tailscale name.
 4. Open it, `$S/report.sh plan <ref> "Spec v1 is ready to review." <url>`, `$S/notify.sh plan <ref> "Spec is ready to review." <url>`, then poll for feedback (`npx -y lavish-axi poll <file>`).
 5. Apply each round of feedback, `$S/report.sh plan <ref> "Spec v<n>: <what changed>." <url>`, and poll again with `--agent-reply`. Start coding only when the feedback says "approve". A question is not approval.
-6. On approve: `$T state <ref> in-progress` and `$S/report.sh build <ref> "Spec approved. Build started."`. With `specs: local`, export the approved spec (`npx -y lavish-axi export`) and attach it to the issue in step 6.
+6. On approve: `$T state <ref> in-progress` and `$S/report.sh --spec <spec file> build <ref> "Spec approved. Build started."`. This saves a copy of the approved spec. From now on the spec is fixed: `report.sh` refuses a `plan` report and a changed spec (exit 5). With `specs: local`, export the approved spec (`npx -y lavish-axi export`) and attach it to the issue in step 6.
 
 ### Mockups
 
@@ -144,7 +145,8 @@ When it splits: do the shared parts first (types, contracts, file moves). Then s
 ## 6. Verify and evidence (build mode)
 
 1. `$S/report.sh verify <ref> "Build done. Verify started."`, then `/cook-verify` with the ref, the done checks, and the performance answer. Make the evidence the user asked for as part of it. For UI work, take screenshots in the same states and viewports as the approved mockup, and list each difference from the mockup with its reason.
-2. FAIL that the repair loop cannot fix, or BLOCKED: **Blocked**.
+   After each `/cook-verify` run, save its receipt: `$S/report.sh --receipt <run>/receipt.md verify <ref> "Verify <result>: <one line>."`.
+2. FAIL that the repair loop cannot fix, or BLOCKED: **Blocked** (give `--receipt` with the `blocked` report too).
 3. PASS: post the evidence on the issue (`$T comment <ref> <file>`): the receipt summary, the media and the approved spec export. With tracker `none`, the evidence goes only in the PR.
 
 ## 7. Pull request (build mode)
