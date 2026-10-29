@@ -6,6 +6,7 @@
 COOK_STATE=${COOK_STATE:-$HOME/.local/state/cook}
 COOK_STEPS="plan build verify review learn blocked ready"
 COOK_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export COOK_TAILSCALE_APP=${COOK_TAILSCALE_APP:-/Applications/Tailscale.app/Contents/MacOS/Tailscale}
 
 pas() {
   local m=$1; shift
@@ -24,7 +25,7 @@ kv() { sed -n "s/^$1=//p" <<<"$2" | head -n 1; }
 cook_machines() {
   local out
   [ -n "${COOK_MACHINES:-}" ] && { echo "$COOK_MACHINES"; return; }
-  if command -v tailscale >/dev/null 2>&1 || [ -x /Applications/Tailscale.app/Contents/MacOS/Tailscale ]; then
+  if command -v tailscale >/dev/null 2>&1 || [ -x "$COOK_TAILSCALE_APP" ]; then
     out=$(python3 -I "$COOK_LIB_DIR/machines.py" --json 2>/dev/null | python3 -I -c 'import json, sys
 for r in json.load(sys.stdin):
     if r.get("self") or (r.get("ssh") and r.get("paseo")):

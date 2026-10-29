@@ -1,0 +1,8 @@
+#!/bin/bash
+# Test stub for brew. "brew install <tool>" puts an empty <tool> command next to this stub.
+echo "brew $*" >>"$STUB_STATE/calls.log"
+[ -e "$STUB_STATE/brew-fail" ] && { echo "Error: download failed" >&2; exit 1; }
+if [ "${1:-}" = install ]; then
+  shift
+  for t in "$@"; do printf '#!/bin/sh\nexit 0\n' >"$(dirname "$0")/$t"; chmod +x "$(dirname "$0")/$t"; done
+fi

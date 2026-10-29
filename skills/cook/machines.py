@@ -18,7 +18,7 @@ import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
 
-TAILSCALE = [shutil.which("tailscale") or "", "/Applications/Tailscale.app/Contents/MacOS/Tailscale"]
+TAILSCALE = [shutil.which("tailscale") or "", os.environ.get("COOK_TAILSCALE_APP", "/Applications/Tailscale.app/Contents/MacOS/Tailscale")]
 PROBE = r'''
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 want="$1"

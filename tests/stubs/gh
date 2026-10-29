@@ -1,0 +1,38 @@
+#!/bin/bash
+# Test stub for gh.
+# $STUB_STATE/gh/pr/<branch> holds "<STATE> <head sha> <url>" for the PR of that branch.
+# $STUB_STATE/gh/no-auth makes "gh auth status" fail. $STUB_STATE/gh/fail makes every other command fail.
+echo "gh $*" >>"$STUB_STATE/calls.log"
+d="$STUB_STATE/gh"
+mkdir -p "$d/pr"
+if [ "${1:-} ${2:-}" = "auth status" ]; then
+  [ -e "$d/no-auth" ] && { echo "You are not logged into any GitHub hosts." >&2; exit 1; }
+  exit 0
+fi
+[ -e "$d/fail" ] && { echo "HTTP 502: Bad Gateway" >&2; exit 1; }
+arg() { local want=$1; shift; while [ "$#" -gt 0 ]; do [ "$1" = "$want" ] && { echo "${2:-}"; return; }; shift; done; }
+
+case "${1:-} ${2:-}" in
+  "pr list")
+    f="$d/pr/$(arg --head "$@" | tr / -)"
+    [ -f "$f" ] && cat "$f"
+    ;;
+  "pr view")
+    for f in "$d"/pr/*; do
+      [ -f "$f" ] || continue
+      read -r state _ url <"$f"
+      [ "$url" = "$3" ] && { echo "$state"; exit 0; }
+    done
+    echo "no pull requests found" >&2; exit 1
+    ;;
+  "issue create")
+    n=$(( $(cat "$d/issue-count" 2>/dev/null || echo 41) + 1 ))
+    echo "$n" >"$d/issue-count"
+    echo "https://github.com/acme/app/issues/$n"
+    ;;
+  "issue view")
+    if [ "$(arg --json "$@")" = url ]; then echo "https://github.com/acme/app/issues/${3#\#}"; else echo "title: Issue ${3}"; fi
+    ;;
+  "issue list"|"issue comment"|"issue edit"|"label create") ;;
+  *) echo "gh stub: unsupported command: $*" >&2; exit 64 ;;
+esac

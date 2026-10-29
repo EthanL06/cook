@@ -1,0 +1,4 @@
+#!/bin/bash
+# Test stub for curl. Prints $STUB_STATE/curl-response, or a ntfy success reply.
+echo "curl $*" >>"$STUB_STATE/calls.log"
+if [ -f "$STUB_STATE/curl-response" ]; then cat "$STUB_STATE/curl-response"; else echo '{"id":"x","event":"message"}'; fi

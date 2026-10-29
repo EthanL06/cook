@@ -1,0 +1,20 @@
+#!/bin/bash
+# Test stub for ssh. Runs the command on this machine, with HOME set to $STUB_HOSTS/<host>.
+# $STUB_STATE/down/<host> makes the host unreachable.
+echo "ssh $*" >>"$STUB_STATE/calls.log"
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -o|-p|-i|-l) shift 2 ;;
+    -*) shift ;;
+    *) break ;;
+  esac
+done
+host=$1; shift
+if [ -e "$STUB_STATE/down/$host" ]; then
+  echo "ssh: connect to host $host port 22: Connection refused" >&2
+  exit 255
+fi
+h="$STUB_HOSTS/$host"
+mkdir -p "$h"
+cd "$h" || exit 255
+exec env -u COOK_STATE HOME="$h" XDG_CONFIG_HOME="$h/.config" XDG_STATE_HOME="$h/.local/state" bash -c "$*"

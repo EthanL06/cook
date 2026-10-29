@@ -1,0 +1,5 @@
+#!/bin/bash
+# Test stub for tailscale. "tailscale status --json" prints $STUB_STATE/tailscale.json, or fails when it is not there.
+echo "tailscale $*" >>"$STUB_STATE/calls.log"
+[ -f "$STUB_STATE/tailscale.json" ] || { echo "failed to connect to local tailscaled" >&2; exit 1; }
+cat "$STUB_STATE/tailscale.json"

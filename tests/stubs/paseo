@@ -1,0 +1,169 @@
+#!/usr/bin/env python3
+"""Test stub for the paseo CLI. Agents live in $STUB_STATE/paseo/<host>/<id>.json.
+
+Fault injection:
+  $STUB_STATE/down/<host>               the daemon on <host> cannot be reached
+  $STUB_STATE/paseo/<host>/fail-<cmd>   <cmd> fails with the file's text
+"""
+import json
+import os
+import pathlib
+import subprocess
+import sys
+import uuid
+
+S = pathlib.Path(os.environ["STUB_STATE"])
+HOSTS = pathlib.Path(os.environ["STUB_HOSTS"])
+args = sys.argv[1:]
+with open(S / "calls.log", "a") as f:
+    f.write("paseo " + " ".join(args) + "\n")
+
+host = "local"
+if args[:1] == ["--host"]:
+    host = args[1].removeprefix("ssh://")
+    args = args[2:]
+home = pathlib.Path(os.environ["HOME"]) if host == "local" else HOSTS / host
+store = S / "paseo" / host
+store.mkdir(parents=True, exist_ok=True)
+
+
+def die(msg, code=1):
+    print(msg, file=sys.stderr)
+    sys.exit(code)
+
+
+if (S / "down" / host).exists():
+    die(f"Error: cannot connect to the daemon at ssh://{host}")
+if args[:1] == ["agent"]:
+    args = args[1:]
+cmd = args[0] if args else ""
+if cmd == "worktree" and args[1:2] == ["archive"]:
+    cmd = "worktree-archive"
+if cmd == "permit":
+    cmd = "permit-" + args[1]
+fail = store / f"fail-{cmd}"
+if fail.exists():
+    die(fail.read_text().strip() or f"Error: {cmd} failed")
+
+
+def opts(rest, flags=()):
+    o, pos, i = {"label": []}, [], 0
+    while i < len(rest):
+        a = rest[i]
+        if a in flags:
+            o[a.lstrip("-")] = True
+            i += 1
+        elif a.startswith("--") and a != "--":
+            k = a[2:]
+            if k == "label":
+                o["label"].append(rest[i + 1])
+            else:
+                o[k] = rest[i + 1]
+            i += 2
+        else:
+            pos.append(a)
+            i += 1
+    return o, pos
+
+
+def agents():
+    return [json.loads(p.read_text()) for p in sorted(store.glob("*.json"))]
+
+
+def find(prefix):
+    hits = [a for a in agents() if a["id"].startswith(prefix)]
+    if not hits:
+        die(f"Error: Agent not found: {prefix}")
+    return hits[0]
+
+
+def save(a):
+    (store / f"{a['id']}.json").write_text(json.dumps(a, indent=1))
+
+
+def tilde(p):
+    return "~" + p[len(str(home)):] if p.startswith(str(home) + "/") else p
+
+
+def labels(a, items):
+    for item in items:
+        for kv in item.split(","):
+            k, _, v = kv.partition("=")
+            a["labels"][k] = v
+
+
+BOOL = ("--json", "-q", "--quiet", "-g", "--global", "-a", "--all", "--no-wait", "--force")
+
+if cmd == "ls":
+    o, _ = opts(args[1:], BOOL)
+    want = dict(x.split("=", 1) for x in o["label"])
+    rows = [a for a in agents() if (o.get("a") or o.get("all") or not a["archived"])
+            and all(a["labels"].get(k) == v for k, v in want.items())]
+    if o.get("json"):
+        print(json.dumps([{"id": a["id"], "shortId": a["id"][:7], "name": a["name"], "status": a["status"],
+                           "cwd": tilde(a["cwd"])} for a in rows]))
+    else:
+        for a in rows:
+            print(a["id"])
+elif cmd == "inspect":
+    a = find(args[1])
+    print(json.dumps({"Id": a["id"], "Name": a["name"], "Provider": a["provider"], "Model": a["model"],
+                      "Status": a["status"], "Archived": a["archived"], "Mode": a["mode"], "Cwd": a["cwd"],
+                      "Labels": a["labels"]}))
+elif cmd == "run":
+    o, pos = opts(args[1:], BOOL)
+    cwd = os.path.abspath(o.get("cwd", os.getcwd()))
+    if not os.path.isdir(cwd):
+        die(f"Error: no such directory: {cwd}")
+    aid = os.environ.get("STUB_NEXT_AGENT_ID") or str(uuid.uuid4())
+    if (store / "next-id").exists():
+        aid = (store / "next-id").read_text().strip()
+        (store / "next-id").unlink()
+    if o.get("new-workspace") == "worktree":
+        branch = o.get("new-branch") or o.get("branch")
+        path = home / ".paseo" / "worktrees" / aid[:8] / branch.replace("/", "-")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if o.get("worktree-mode") == "branch-off":
+            git = ["git", "-C", cwd, "worktree", "add", "-q", "-b", branch, str(path), o["base"]]
+        else:
+            git = ["git", "-C", cwd, "worktree", "add", "-q", str(path), branch]
+        p = subprocess.run(git, capture_output=True, text=True)
+        if p.returncode:
+            die("Error: worktree setup failed: " + p.stderr.strip())
+        cwd = str(path)
+    provider, _, model = o.get("provider", "claude").partition("/")
+    a = {"id": aid, "name": o.get("title", "agent"), "status": "idle", "archived": False, "cwd": cwd,
+         "provider": provider, "model": o.get("model", model or "default"), "mode": o.get("mode", "default"),
+         "labels": {}, "prompt": pos[-1] if pos else "", "messages": []}
+    labels(a, o["label"])
+    save(a)
+    print(aid if o.get("q") or o.get("quiet") else f"Agent {aid[:7]} started")
+elif cmd == "send":
+    o, pos = opts(args[1:], BOOL)
+    a = find(pos[0])
+    if a["archived"]:
+        die(f"Error: agent {pos[0]} is archived")
+    msg = pathlib.Path(o["prompt-file"]).read_text() if "prompt-file" in o else o.get("prompt") or pos[1]
+    a["messages"].append(msg)
+    save(a)
+elif cmd == "update":
+    o, pos = opts(args[1:], BOOL)
+    a = find(pos[0])
+    labels(a, o["label"])
+    if "name" in o:
+        a["name"] = o["name"]
+    save(a)
+elif cmd == "archive":
+    _, pos = opts(args[1:], BOOL)
+    a = find(pos[0])
+    a["archived"] = True
+    save(a)
+elif cmd == "worktree-archive":
+    pass
+elif cmd == "permit-ls":
+    f = store / "permits.json"
+    print(f.read_text() if f.exists() else "[]")
+elif cmd == "permit-allow":
+    pass
+else:
+    die(f"paseo stub: unsupported command: {' '.join(args)}", 64)

@@ -9,6 +9,7 @@
 # Exit codes: 0 every required tool is there, 1 a required tool is missing, 2 bad arguments.
 set -u
 here="$(cd "$(dirname "$0")" && pwd)"
+COOK_TAILSCALE_APP=${COOK_TAILSCALE_APP:-/Applications/Tailscale.app/Contents/MacOS/Tailscale}
 fix=0 yes=0 quick=0 repo=$PWD
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -124,7 +125,7 @@ run_checks() {
     check "$G" optional "phone pushes" "$(yn "grep -qE '^NOTIFY=(ntfy|pushover|none)' '$conf'")" "" \
       "install the ntfy app, pick a long random topic, and put NOTIFY=ntfy and NTFY_TOPIC=<topic> in $conf"
   fi
-  check "$G" optional tailscale "$(yn 'has tailscale || [ -x /Applications/Tailscale.app/Contents/MacOS/Tailscale ]')" "" \
+  check "$G" optional tailscale "$(yn 'has tailscale || [ -x "$COOK_TAILSCALE_APP" ]')" "" \
     "only for builds on other machines: https://tailscale.com/download"
 }
 

@@ -1,0 +1,12 @@
+#!/bin/bash
+# Test stub for npx. "npx -y <pkg> ..." caches <pkg>. "npx --no -- <pkg> ..." works only for a cached package.
+# $STUB_STATE/npx/out-<pkg> is printed as the output of <pkg>.
+echo "npx $*" >>"$STUB_STATE/calls.log"
+d="$STUB_STATE/npx"
+mkdir -p "$d"
+case "${1:-}" in
+  --no) shift; [ "${1:-}" = -- ] && shift; [ -e "$d/cached-$1" ] || { echo "npm error: $1 not found" >&2; exit 1; } ;;
+  -y) shift; touch "$d/cached-$1" ;;
+esac
+[ -f "$d/out-$1" ] && cat "$d/out-$1"
+exit 0
