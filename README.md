@@ -2,73 +2,41 @@
 
 <p align="center"><b>From issue to reviewed PR. You write the spec. Agents do the rest.</b></p>
 
-cook is a kit of agent skills. It takes one issue or prompt to a pull request that is ready for review. You take part in three places: the intake, the spec, and the final review. Agents do all other work in their own git worktrees. Every build leaves the project easier for the next agent. cook works with any agent that can use shell, git, and files.
+<p align="center"><img src="docs/demo.gif" width="100%" alt="cook demo: you run /cook on an issue, shape the spec in Lavish, agents build, verify and learn, and you review a PR with proof"></p>
 
-## The three ideas
+cook is a kit of agent skills. It takes one issue or prompt to a pull request that is ready for review. You do three things: the intake, the spec and the review. Agents do the rest, each build in its own git worktree, and every build leaves the project easier for the next agent. cook works with any agent that can use shell, git and files.
 
-| Idea | What it means |
-| --- | --- |
-| **Spec** | Spend the most time on the spec. The spec and the mockups go through a Lavish review loop until you approve them. No code is written before you say "approve". |
-| **Verify** | Verification is as important as the build. Each project has verifier skills. A build is ready only when the verifiers pass with fresh evidence. You do not test by hand. |
-| **Learn** | Each build ends with a retro. Verifiers get better, and recipes and scripts keep the next agent from the same mistakes. |
-
-## The flow
-
-![The cook flow](docs/flow.svg)
-
-The top lane is you. The bottom lane is autonomous. You have three touchpoints: intake, spec, and review. You unblock a build only when the agent asks.
+- **Spec.** Spend the most time on the spec. Specs and mockups go through a [Lavish](https://github.com/kunchenguid/lavish-axi) review loop. No code is written before you approve.
+- **Verify.** Verification is as important as the build. Each project has verifier skills, and a build is ready only when they pass with fresh evidence.
+- **Learn.** Each build ends with a retro. Verifiers get better, and recipes and scripts keep the next agent from the same mistakes.
 
 ## Quick start
 
-Lines that start with `you>` are what you type. All other lines are what cook does.
+```bash
+npx skills add EthanL06/cook
+~/.agents/skills/cook/doctor.sh --fix
+```
+
+Then, in your agent, inside your project:
 
 ```text
-# once per machine
-npx skills add EthanL06/cook
-~/.agents/skills/cook/doctor.sh --fix        # checks every tool, asks once, installs what it can
-
-# once per project
-cd ~/code/recipe-app
-you> /cook-init
-     found: Next.js web app, /api routes, Vitest, Playwright config, Postgres migrations
-     drafted: .agents/cook.md, verifier-browser, verifier-api, verifier-tests, recipes/dev-setup.md
-     ran each verifier once: browser ✓  api ✓  tests ✓
-     review it here → http://localhost:4387/session/9f2c…   (you approve)
-     wrote the files. Commit them with your next change.
-
-# every feature
-you> /cook #42                                 # GitHub issue "Save recipes offline"
-     intake (defaults in [brackets]):
-       done when?        [a saved recipe opens with wifi off]
-       mockup variations [3]
-       evidence          [screenshots + short video]
-       review loop       [no-mistakes]
-you> (enter to accept all)
-     build started: branch feat-offline-recipes, agent a7f3
-📱  "Plan ready for you - #42"  → you open the Lavish link on your phone
-you> (annotate: "variation B, but put the toggle in the recipe menu") ... "approve"
-     … build · verify (browser ✓ api ✓ tests ✓) · PR #57 · no-mistakes ✓ · retro: +1 recipe (service-worker cache in dev)
-📱  "Ready for review - #42"  → github.com/you/recipe-app/pull/57
-
-# impatient? ask, from any session
-you> /cook-status                              # every build: step, who it waits on, how long
-
-# more builds at the same time, from the same session
-you> /cook "add CSV export to the shopping list"
-you> /cook #45 on desktop-pc                   # runs on another Tailscale machine
-
-# the agent crashed or the machine restarted?
-you> /cook resume #42                          # continues from the saved step, with the approved spec
-
-# after you merge
-you> /cook cleanup                             # removes merged worktrees, agents and branches
+/cook-init            set up this project once: cook.md, verifiers, recipes
+/cook #42             take issue #42 to a reviewed PR
+/cook-status          see every build and who it waits on
+/cook resume #42      continue a build after a crash or a restart
+/cook cleanup         remove merged worktrees, agents and branches
 ```
 
 ## Install
 
-Choose one of three ways. Each way installs the skills globally. Global install links the skills into `~/.agents/skills` and `~/.claude/skills`.
+| Way | Command |
+| --- | --- |
+| skills CLI | `npx skills add EthanL06/cook`, then `~/.agents/skills/cook/doctor.sh --fix` |
+| git clone | `git clone https://github.com/EthanL06/cook ~/Developer/cook && ~/Developer/cook/install.sh add` |
+| Your agent | Paste the prompt below |
 
-### 1. Paste a prompt into your agent
+<details>
+<summary>Prompt to paste into your agent</summary>
 
 ```text
 Install the cook kit from https://github.com/EthanL06/cook.
@@ -86,22 +54,34 @@ Never type or store a secret for me. This includes tokens, API keys, and passwor
 When a tool needs a secret, tell me where to put it and let me do it.
 ```
 
-### 2. skills CLI
+</details>
 
-```bash
-npx skills add EthanL06/cook
-~/.agents/skills/cook/doctor.sh --fix
-```
+## The skills
 
-The skills CLI does not run setup steps. If you skip doctor, `/cook` and `/cook-init` run it for you the first time.
+| Skill | What it does |
+| --- | --- |
+| `/cook` | Takes an issue, URL or prompt to a reviewed PR. Your session stays a hub that reports plan links, blockers and PRs. Also `resume` and `cleanup`. |
+| `/cook-init` | Sets up one project: `.agents/cook.md`, one verifier per area, recipes. Runs each verifier once before it writes it. |
+| `/cook-verify` | Proves a build works with the project's verifiers. Ends with PASS, FAIL or BLOCKED. |
+| `/cook-learn` | The retro. Turns repeated problems into tests, verifier checks, scripts or recipes. |
+| `/cook-status` | Read-only view of every build. `--watch` keeps it live. |
 
-### 3. git clone
+## What you need
 
-```bash
-git clone https://github.com/EthanL06/cook ~/Developer/cook && ~/Developer/cook/install.sh add
-```
+**Required:** [Lavish](https://github.com/kunchenguid/lavish-axi), [Paseo](https://paseo.sh), [agent-browser](https://github.com/vercel-labs/agent-browser), `gh`, `git`, Node.js, and Claude Code or Codex.
+**Pluggable:** tracker (GitHub, Linear, none), review loop ([no-mistakes](https://kunchenguid.github.io/no-mistakes/), Greptile, none), browser, Mobbin references.
+**Optional:** ntfy pushes to your phone, Tailscale for builds on other machines.
 
-### install.sh commands
+`doctor.sh` checks all of it for the current project and installs what it can after you say yes.
+
+## Hard rules
+
+cook never merges, never force-pushes, never rebases a pushed branch, and never writes data or applies migrations to a shared environment. It stops only the processes it started, never redoes an approved spec, and sends one push per blocker.
+
+## Reference
+
+<details>
+<summary>install.sh commands</summary>
 
 | Command | What it does |
 | --- | --- |
@@ -110,7 +90,10 @@ git clone https://github.com/EthanL06/cook ~/Developer/cook && ~/Developer/cook/
 | `install.sh remove [--project <dir>]` | Removes the skills that install.sh put there. Your `cook.md`, verifiers and recipes stay. |
 | `install.sh doctor [--fix]` | Checks each tool the project needs. With `--fix`, it lists the install commands, asks once, and runs only what you approve. |
 
-## Missing tools
+</details>
+
+<details>
+<summary>Missing tools and doctor.sh</summary>
 
 `doctor.sh` checks what this machine needs for the current project. It reads `.agents/cook.md`, so a Linear project needs `LINEAR_API_KEY`, `review: greptile` needs a Greptile skill, and `ui_refs: mobbin` needs a Mobbin sign-in.
 
@@ -119,17 +102,10 @@ git clone https://github.com/EthanL06/cook ~/Developer/cook && ~/Developer/cook/
 - Steps that need an account, a password or a secret are never run. Doctor lists them under "Do these yourself": `gh auth login`, the Claude Code or Codex sign-in, API keys, Mobbin and ntfy.
 - `/cook` runs `doctor.sh --quick` at the start of each build. It is silent when the last check passed in the past 24 hours.
 
-## The skills
+</details>
 
-| Skill | Use it to |
-| --- | --- |
-| `/cook` | Start a build from an issue, URL, or prompt. It has these modes: intake, hub, build, resume, and cleanup. The session you start from stays a hub that reports plan links, blockers, and PRs. `/cook resume [ref]` continues a build that stopped. |
-| `/cook-init` | Set up one project. It reads the repo, drafts `.agents/cook.md` and the verifiers, and runs each verifier once before it writes the verifier. |
-| `/cook-verify` | Verify a finished build. It routes to the project verifier skills and ends with a PASS, FAIL, or BLOCKED receipt. |
-| `/cook-learn` | Run the retro. It finds what to write down or fix so the next build is better. |
-| `/cook-status` | See every build. It is read-only. Use `--watch` to redraw every 10 seconds. Use `/cook-status <ref>` for detail on one build. |
-
-### What /cook-init creates
+<details>
+<summary>What /cook-init creates</summary>
 
 | Path | Content |
 | --- | --- |
@@ -139,12 +115,12 @@ git clone https://github.com/EthanL06/cook ~/Developer/cook && ~/Developer/cook/
 | `AGENTS.md` | A "Cooking" section. |
 | `scripts/qa/` | Not made at init. The retro makes it later. |
 
-The init preflight needs two things:
+The init preflight needs a GitHub remote (it offers `gh repo create --private` and runs it only after you say yes) and a clean, committed tree (it stops and asks you to commit, and never commits for you).
 
-- A GitHub remote. If there is none, init offers `gh repo create --private`. It runs the command only after you say yes.
-- A clean, committed tree. If the tree is not clean, init stops and asks you to commit. It never commits for you.
+</details>
 
-## What you need
+<details>
+<summary>All tools and options</summary>
 
 | Part | Default | Status | Role |
 | --- | --- | --- | --- |
@@ -156,26 +132,22 @@ The init preflight needs two things:
 | Tracker | github | Pluggable | `github`, `linear`, or `none` |
 | Review loop | [no-mistakes](https://kunchenguid.github.io/no-mistakes/) | Pluggable | `no-mistakes`, `greptile`, or `none` |
 | Browser option | agent-browser | Pluggable | `agent-browser`, `chrome-devtools-axi`, or `playwright-axi` |
+| UI references | Mobbin (`mobbin-axi`) | Pluggable | `ui_refs: mobbin` or `none` (default). Needs a Mobbin account. |
 | Push to phone | ntfy | Optional | Pushover also works. Config is in `~/.config/cook/notify.env`. |
 | Many machines | Tailscale | Optional | Run builds on other machines. Lavish links open on your phone. |
-| UI references | Mobbin (`mobbin-axi`) | Pluggable | `ui_refs: mobbin` or `none` (default). Needs a Mobbin account. |
 | Many accounts | CLI proxy | Optional | Guide only. cook does not use it directly. |
 
-## Hard rules
+</details>
 
-- cook never merges.
-- cook never force-pushes.
-- cook never rebases a pushed branch.
-- cook never writes data or applies migrations to a shared environment. Deploy steps go in a comment for a person.
-- cook stops only the processes that it started.
-- cook sends one push for each blocker.
-- cook never redoes an approved spec. It never resumes a build in a worktree with uncommitted changes before it tells you.
-
-## Resume a build
+<details>
+<summary>Resume a build</summary>
 
 Each build saves its state at each step in `~/.local/state/cook/runs/` on its machine: the step, the agent, the branch and the latest commit, and copies of the brief, the approved spec and the verify receipts. When an agent crashes or a machine restarts, `/cook resume <ref>` sends the agent a message, or starts a new agent in the same worktree. The new agent continues from the saved step. `/cook resume` with no ref lists the builds that can continue. See [Resume a build that stopped](docs/guide.md#resume-a-build-that-stopped).
 
-## Tests
+</details>
+
+<details>
+<summary>Tests</summary>
 
 ```bash
 tests/run.sh
@@ -183,19 +155,17 @@ tests/run.sh
 
 This command runs shellcheck and the workflow tests: install, launch and branch conflicts, configs, run state, resume, status and cleanup. The tests use stubs for `paseo`, `gh`, `ssh`, `brew`, `npx` and `tailscale`, and temporary git repos. They never touch your real home folder. GitHub Actions runs them on macOS and Ubuntu. See [Tests](docs/guide.md#tests).
 
-## Links
+</details>
+
+## Docs
 
 - [Workflow guide](docs/guide.md): every tool, why it is in the flow, and how to use it.
 - [cook.md reference](docs/cook-md.md): every field in `.agents/cook.md`.
+- [The flow as a diagram](docs/flow.svg)
 
 ## Credits
 
-cook builds on the work of Kun Chen. Watch these videos:
-
-- [L8 Principal's Agentic Engineering Workflow](https://www.youtube.com/watch?v=iQyg-KypKAA)
-- [How This Ex-Meta L8 Engineer Ships 40 PRs a Day with AI Agents](https://www.youtube.com/watch?v=88B6DimMD2g)
-
-Tools from Kun Chen that cook uses: [Lavish](https://github.com/kunchenguid/lavish-axi), [AXI](https://github.com/kunchenguid/axi), and [no-mistakes](https://kunchenguid.github.io/no-mistakes/).
+cook builds on the work of Kun Chen: [L8 Principal's Agentic Engineering Workflow](https://www.youtube.com/watch?v=iQyg-KypKAA), [How This Ex-Meta L8 Engineer Ships 40 PRs a Day with AI Agents](https://www.youtube.com/watch?v=88B6DimMD2g), and his tools [Lavish](https://github.com/kunchenguid/lavish-axi), [AXI](https://github.com/kunchenguid/axi) and [no-mistakes](https://kunchenguid.github.io/no-mistakes/).
 
 ## License
 
