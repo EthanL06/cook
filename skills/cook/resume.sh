@@ -84,7 +84,7 @@ gather() {
 all=$(gather)
 
 if [ -z "$want" ]; then
-  printf '%-12s %-12s %-8s %-10s %-26s %-6s %s\n' REF MACHINE STEP AGENT WORKTREE AGE KEY
+  printf '%-12s %-12s %-14s %-10s %-24s %-6s %s\n' REF MACHINE STEP AGENT WORKTREE AGE KEY
   done_n=0
   while IFS=$'\t' read -r m js; do
     [ -n "$m" ] || continue
@@ -98,7 +98,7 @@ if [ -z "$want" ]; then
       [ "$(kv dirty "$p")" -gt 0 ] && wt="$(kv dirty "$p") uncommitted file(s)"
     fi
     step=$(j .step); [ "$step" = blocked ] && step="blocked:$(j .resume_step)"
-    printf '%-12s %-12s %-8s %-10s %-26s %-6s %s\n' "$(j .ref)" "$m" "$step" "$(alive_word "$(agent_info "$m" "$(j .agent_id)")")" \
+    printf '%-12s %-12s %-14s %-10s %-24s %-6s %s\n' "$(j .ref)" "$m" "$step" "$(alive_word "$(agent_info "$m" "$(j .agent_id)")")" \
       "$wt" "$(age "$(j .updated)")" "$(j .key)"
   done <<<"$all"
   [ "$done_n" -gt 0 ] && echo "$done_n done build(s) not shown. /cook cleanup removes them."
