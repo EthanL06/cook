@@ -2,3 +2,5 @@ external-sources=true
 source-path=SCRIPTDIR
 # The scripts that run on another machine are single-quoted strings on purpose: they expand there, not here.
 disable=SC2016
+# "check && check || exit" is the house style, and the last part always stops. Shellcheck 0.9 flags it, 0.10 and later do not.
+disable=SC2015
