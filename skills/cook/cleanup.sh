@@ -31,7 +31,7 @@ echo path=$d
 echo branch=$(git -C "$d" branch --show-current)
 echo head=$(git -C "$d" rev-parse HEAD)
 echo repo=$(dirname "$(git -C "$d" rev-parse --path-format=absolute --git-common-dir)")
-echo origin=$(git -C "$d" remote get-url origin 2>/dev/null)
+echo origin=$(git -C "$d" config --get remote.origin.url)
 echo dirty=$(git -C "$d" status --porcelain | wc -l | tr -d " ")
 echo unpushed=$(git -C "$d" rev-list --count HEAD --not --remotes=origin)'
 

@@ -31,7 +31,7 @@ if [ -n "$want" ]; then
     for g in "$root"/*/.git "$root"/*/*/.git; do
       [ -d "$g" ] || continue
       d=${g%/.git}
-      u=$(git -C "$d" remote get-url origin 2>/dev/null) || continue
+      u=$(git -C "$d" config --get remote.origin.url) || continue
       s=$(printf '%s' "$u" | sed -E 's#^.*(github\.com|gitlab\.com|bitbucket\.org)[:/]##; s#\.git$##')
       [ "$s" = "$want" ] && { echo "repo=$d"; exit 0; }
     done
