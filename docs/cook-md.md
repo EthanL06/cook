@@ -30,6 +30,12 @@ cook reads the file from the main checkout. A build in a worktree uses the same 
 
 The header supports a small YAML subset: plain values, quoted strings, inline lists (`[a, b]`), block lists (`- a`), one level of nested keys, and `#` comments.
 
+cook checks the header before it uses it. A line that is not valid YAML, a value that is not in the list above, an unknown field, or `tracker: linear` without `linear_team` stops `/cook` and shows in `doctor.sh`. Each problem has its line number. To check the file yourself:
+
+```sh
+python3 -I ~/.agents/skills/cook/config.py check
+```
+
 ## Body
 
 Put here what an agent must know and cannot read from the code:

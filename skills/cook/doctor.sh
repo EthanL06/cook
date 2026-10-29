@@ -58,7 +58,11 @@ yn() { if eval "$1" >/dev/null 2>&1; then echo 1; else echo 0; fi; }
 
 run_checks() {
   rows=() fixes=() manual=() missing=0
-  local G="Core"
+  local G="Core" problems
+  if [ -n "$cookmd" ]; then
+    problems=$(python3 -I "$here/config.py" --repo "$repo" check 2>&1 >/dev/null | sed 1d | sed 's/^ *//' | paste -sd ';' - | sed 's/;/; /g')
+    check "Project" required "cook.md" "$( [ -z "$problems" ] && echo 1 || echo 0)" "" "fix $cookmd: $problems"
+  fi
   check "$G" required git           "$(yn 'has git')"     "$(brew_or git '')" "install git from https://git-scm.com"
   check "$G" required python3       "$(yn 'has python3')" ""                  "install Python 3 from https://www.python.org"
   check "$G" required jq            "$(yn 'has jq')"      "$(brew_or jq '')"  "install jq from https://jqlang.org"

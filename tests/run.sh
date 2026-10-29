@@ -19,7 +19,7 @@ real="$work/real"
 mkdir -p "$real"
 for t in bash sh env git python3 jq sed awk grep cat ls mkdir rm cp mv ln readlink dirname basename tr wc head tail \
   sort uniq cut date touch find xargs mktemp chmod df cksum hostname uname sleep tee diff cmp kill ps lsof od \
-  comm expr stat; do
+  comm expr stat paste; do
   p=$(type -P "$t") && ln -s "$p" "$real/$t"
 done
 for t in bash git python3 jq; do

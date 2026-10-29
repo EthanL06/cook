@@ -8,14 +8,14 @@
 #        tracker.sh branch <ref>                        the tracker's own branch name, if it has one
 # One interface over the tracker set in cook.md (tracker: github | linear | none).
 # Refs: GitHub "#42" or "42", Linear "ENG-123". With "none", every command is a no-op that exits 0.
-# Exit codes: 0 done, 1 bad arguments, 2 the tracker command failed, 3 not supported by this tracker.
+# Exit codes: 0 done, 1 bad arguments, 2 the tracker command failed, 3 not supported by this tracker, 4 cook.md is not valid.
 set -u
 cmd=${1:-}; shift 2>/dev/null
-tracker=$(python3 -I "$(dirname "$0")/config.py" get tracker github)
 L="npx -y linear-sdk-axi"
 num() { echo "${1#\#}"; }
 
 [ -n "$cmd" ] || { echo "usage: tracker.sh view|search|create|comment|state|url|branch ..." >&2; exit 1; }
+tracker=$(python3 -I "$(dirname "$0")/config.py" get tracker github) || exit 4
 [ "$tracker" = none ] && { [ "$cmd" = url ] || [ "$cmd" = branch ] || echo "tracker is none: nothing to do"; exit 0; }
 
 case "$tracker:$cmd" in

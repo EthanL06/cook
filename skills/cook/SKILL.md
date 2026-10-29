@@ -43,7 +43,7 @@ T="$S/tracker.sh"                # view, search, create, comment, state, url, br
 
 ## 1. Intake (intake mode)
 
-1. **Config.** Run `$C path`. If there is no `cook.md`, stop and offer `/cook-init`. Do not guess the project facts.
+1. **Config.** Run `$C check`. Exit 2 means there is no `cook.md`: stop and offer `/cook-init`. Exit 4 means it is not valid: show the problems it lists and stop until the user fixes them. Do not guess the project facts.
    **Tools.** Run `$S/doctor.sh --quick`. It is silent and fast when the last check passed. If it exits 1, show its report and ask: "Install the missing tools now?" On yes, run `$S/doctor.sh --fix --yes`. Steps it lists under "Do these yourself" (sign-ins, API keys, accounts) are for the user. Stop until a required one is done. Never type a secret for the user.
 2. **Parse the arguments:** an issue ref or URL, or a prompt; a machine (`on desktop-pc`); a base branch (`from release-2`). The base is `$C get base` unless the user names one. Do not ask about it.
 3. **Read what exists.** With a ref: `$T view <ref>`. With a prompt: `$T search "<key words>"` for a related open issue.
