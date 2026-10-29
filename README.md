@@ -57,6 +57,9 @@ you> /cook-status                              # every build: step, who it waits
 you> /cook "add CSV export to the shopping list"
 you> /cook #45 on desktop-pc                   # runs on another Tailscale machine
 
+# the agent crashed or the machine restarted?
+you> /cook resume #42                          # continues from the saved step, with the approved spec
+
 # after you merge
 you> /cook cleanup                             # removes merged worktrees, agents and branches
 ```
@@ -120,7 +123,7 @@ git clone https://github.com/EthanL06/cook ~/Developer/cook && ~/Developer/cook/
 
 | Skill | Use it to |
 | --- | --- |
-| `/cook` | Start a build from an issue, URL, or prompt. It has four modes: intake, hub, build, and cleanup. The session you start from stays a hub that reports plan links, blockers, and PRs. |
+| `/cook` | Start a build from an issue, URL, or prompt. It has these modes: intake, hub, build, resume, and cleanup. The session you start from stays a hub that reports plan links, blockers, and PRs. `/cook resume [ref]` continues a build that stopped. |
 | `/cook-init` | Set up one project. It reads the repo, drafts `.agents/cook.md` and the verifiers, and runs each verifier once before it writes the verifier. |
 | `/cook-verify` | Verify a finished build. It routes to the project verifier skills and ends with a PASS, FAIL, or BLOCKED receipt. |
 | `/cook-learn` | Run the retro. It finds what to write down or fix so the next build is better. |
@@ -166,6 +169,19 @@ The init preflight needs two things:
 - cook never writes data or applies migrations to a shared environment. Deploy steps go in a comment for a person.
 - cook stops only the processes that it started.
 - cook sends one push for each blocker.
+- cook never redoes an approved spec. It never resumes a build in a worktree with uncommitted changes before it tells you.
+
+## Resume a build
+
+Each build saves its state at each step in `~/.local/state/cook/runs/` on its machine: the step, the agent, the branch and the latest commit, and copies of the brief, the approved spec and the verify receipts. When an agent crashes or a machine restarts, `/cook resume <ref>` sends the agent a message, or starts a new agent in the same worktree. The new agent continues from the saved step. `/cook resume` with no ref lists the builds that can continue. See [Resume a build that stopped](docs/guide.md#resume-a-build-that-stopped).
+
+## Tests
+
+```bash
+tests/run.sh
+```
+
+This command runs shellcheck and the workflow tests: install, launch and branch conflicts, configs, run state, resume, status and cleanup. The tests use stubs for `paseo`, `gh`, `ssh`, `brew`, `npx` and `tailscale`, and temporary git repos. They never touch your real home folder. GitHub Actions runs them on macOS and Ubuntu. See [Tests](docs/guide.md#tests).
 
 ## Links
 

@@ -18,8 +18,10 @@ For a full walkthrough of one build, see the [Quick start in the README](../READ
 10. [ntfy](#ntfy-optional)
 11. [Tailscale](#tailscale-optional)
 12. [CLI proxy](#cli-proxy-optional)
-13. [Working with cook day to day](#working-with-cook-day-to-day)
-14. [Credits](#credits)
+13. [Resume a build that stopped](#resume-a-build-that-stopped)
+14. [Working with cook day to day](#working-with-cook-day-to-day)
+15. [Tests](#tests)
+16. [Credits](#credits)
 
 ## The three ideas
 
@@ -52,6 +54,7 @@ The agent does all other steps: issue, worktree, draft spec, build, verify, PR, 
 | cook never writes data or applies migrations to a shared environment. | Deploy steps go in a comment. A person does them. |
 | cook stops only the processes that it started. | Other worktrees and servers stay safe. |
 | cook sends one push for each blocker. | Your phone does not fill with noise. |
+| cook never redoes an approved spec, and never resumes into a worktree with uncommitted changes before it tells you. | Your approval and your work stay. |
 
 If `cook.md` or the `AGENTS.md` of the project is stricter than the kit, the stricter rule wins.
 
@@ -129,7 +132,7 @@ The agent starts to write code. A question is not approval. The agent waits for 
 
 ### Setup
 
-Paseo is a required tool. cook starts a build with the runner for your setup: `paseo-local`, or `paseo-remote` for a Tailscale machine. The `base` and `branch` settings in `.agents/cook.md` control the starting branch and the branch name:
+Paseo is a required tool. The hub starts each build agent with `launch.sh`, on this machine or on a Tailscale machine. The `base` and `branch` settings in `.agents/cook.md` control the starting branch and the branch name:
 
 ```yaml
 base: main
@@ -141,6 +144,17 @@ You can set a different starting branch for one build:
 ```text
 /cook #42 from release-2
 ```
+
+Before `launch.sh` starts the agent, it checks the machine and the branch:
+
+| Case | What happens |
+| --- | --- |
+| The branch is new. | The worktree branches off `origin/<base>`. |
+| The branch is on `origin`. | The build continues on it. A local copy that is behind `origin` moves forward first. |
+| The branch is only local. | The build continues on it. |
+| The branch is checked out in another worktree. | It stops. A build may use it: use `/cook resume <ref>`. |
+| The local branch and `origin` have different commits. | It stops. Merge or push the branch by hand, or pick another name. |
+| The machine or its Paseo daemon does not answer, or `paseo run` fails. | It stops and tells you why. Nothing has started. |
 
 ### Example
 
@@ -433,6 +447,72 @@ You run five builds at once. The proxy sends each agent request to an account th
 
 ---
 
+## Resume a build that stopped
+
+### What
+
+A build can stop before it is done: the agent crashes, the machine restarts, or verify fails again and again until the agent stops. `/cook resume` continues the build from the step where it stopped. You do not start the build again, and you do not approve the spec again.
+
+### Why
+
+A build saves its state at each step, on the machine that runs it. Each `report.sh` call writes one small file, `~/.local/state/cook/runs/<repo>-<ref>.json`. It holds:
+
+| Field | Content |
+| --- | --- |
+| Step | The last step, and the step to continue from. After a `blocked` step, this is the step before the block. |
+| Agent and machine | The Paseo agent ID, the agents it replaced, and the machine name. |
+| Git | The ref, the branch, the base, the worktree, and the latest commit. |
+| Brief | A copy of the build brief, with the intake answers word for word. |
+| Spec | A copy of the approved spec, its path and link, and the time of the approval. |
+| Verify | The verdict and a copy of each receipt, with the commit that it checked and the number of attempts. |
+
+The copies are in the folder `~/.local/state/cook/runs/<repo>-<ref>/`, so they stay when the worktree is gone. Each write replaces the file atomically, so a crash cannot leave half a file. `/cook-status` and `/cook cleanup` read the same files.
+
+### Setup
+
+There is no setup. Every build saves its state.
+
+### How resume works
+
+`/cook resume` with no ref lists the builds that are not done, on each machine:
+
+```text
+REF          MACHINE      STEP           AGENT      WORKTREE                 AGE    KEY
+#42          studio       verify         gone       clean                    3h     recipe-app-42
+csv-export   local        blocked:build  idle       2 uncommitted file(s)    1d     recipe-app-csv-export
+```
+
+`/cook resume <ref>` checks the worktree, the branch and the agent. Then it does one of two things:
+
+- The agent is idle in Paseo: the hub sends it a `COOK RESUME` message.
+- The agent is gone: the hub starts a new agent in the same worktree, with the same provider, model and mode.
+
+The message names the step to continue from, the copy of the brief, the approved spec, the last receipt and the latest commit. The agent continues from that step. After a spec approval, `report.sh` refuses to go back to the plan step.
+
+Resume stops, and changes nothing, in these cases:
+
+| Case | What resume does |
+| --- | --- |
+| The worktree has uncommitted changes. | It lists the files. The hub asks you. On yes, the agent keeps the changes. |
+| The worktree is gone, but the branch has the latest commit. | It asks you. On yes, it checks out the branch in a new worktree. |
+| The branch is gone, or the worktree lost the latest commit. | It tells you where the commit is. It never makes, moves or deletes a branch. |
+| The agent is still running, or another agent works in the worktree. | It tells you. There is nothing to resume. |
+| The machine does not answer. | It tells you. Try again when the machine is back. |
+
+### Example
+
+The machine of build #42 restarted during verify:
+
+```text
+you> /cook-status
+     #42   verify   you (resume)   3h   studio   agent is gone. Run /cook resume #42
+you> /cook resume #42
+     #42 on studio: started agent b81c in the same worktree. It continues at verify,
+     with the approved spec and the last receipt (FAIL, attempt 2).
+```
+
+---
+
 ## Working with cook day to day
 
 | Habit | How |
@@ -443,7 +523,24 @@ You run five builds at once. The proxy sends each agent request to an account th
 | Review the PR evidence | Read the verify receipt, the screenshots, and the deploy steps. Do not skip the NOT COVERED lines. |
 | Apply the deploy steps | cook never changes a shared environment. When the PR has a deploy-steps comment, do the steps yourself. |
 | Review the retro changes | New recipes, scripts, and verifier checks are in the PR. Reject a recipe that does not meet the bar. |
-| Clean up | After you merge, run `/cook cleanup`. It lists the builds, and after you approve, it removes the agent, the worktree, and the local branch. It never removes unsaved work. |
+| Resume | When a build stopped (a crash, a restart), run `/cook resume <ref>`. It continues from the saved step. |
+| Clean up | After you merge, run `/cook cleanup`. It lists the builds, and after you approve, it removes the agent, the worktree, the local branch and the run state. It never removes unsaved work. |
+
+---
+
+## Tests
+
+The scripts have workflow tests in `tests/`. One command runs shellcheck and all the tests:
+
+```bash
+tests/run.sh
+```
+
+- `tests/run.sh resume` runs only the tests whose name contains `resume`. `-v` shows the output of each test.
+- Each test runs in its own sandbox: a temporary `HOME`, `COOK_STATE`, `XDG_*` folders and `TMPDIR`. The tests never read or change your real home folder.
+- Stubs in `tests/stubs/` replace `paseo`, `gh`, `ssh`, `brew`, `npx`, `tailscale` and `curl`. Each repo is a temporary git repo with a bare `origin`. The `ssh` stub runs the command on this machine with the `HOME` of the other machine, so tests can cover builds on other machines.
+- The tests need `bash`, `git`, `python3` and `jq`. They need no other tool.
+- GitHub Actions runs the same command on macOS and Ubuntu for each push and pull request.
 
 ---
 

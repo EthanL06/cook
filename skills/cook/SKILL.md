@@ -136,7 +136,7 @@ A `COOK RESUME` message names the step to continue from, the copy of the origina
 
 ## Cleanup (hub)
 
-A build leaves its agent, worktree, local branch, the processes it started and its event log. Cleanup removes them. It never touches the issue, the PR, the remote branch, other worktrees or `origin`.
+A build leaves its agent (more than one after a resume), worktree, local branch, the processes it started, its event logs and its run state. Cleanup removes them. It never touches the issue, the PR, the remote branch, other worktrees or `origin`.
 
 1. When the hub starts, and on each `merged` event, run `$S/cleanup.sh list`. If it shows a `target` or `suggest` line or a `full` machine, suggest a cleanup in one line. Do not wait for the answer.
 2. On "clean up": run `$S/cleanup.sh list <refs the user named>`. Show a table: ref, machine, PR, verdict, reason. Show `suggest` builds apart. For each `skip`, show what is not saved and the worktree path.
